@@ -51,10 +51,8 @@ export default {
             rocks: [],
 
             ar_tag_state: {
-                frontBack: false,
                 bearing: 0,
                 distance: -1,
-                tagBearing: 0
             },
 
             obstacle_state: {
@@ -81,10 +79,8 @@ export default {
 
             let tag_detected_idx = -1;
             let ar_tag_state = {
-                frontBack: false,
                 bearing: 0,
                 distance: -1,
-                tagBearing: 0
             };
 
             for (let i = 0; i < ar_tags.length; i++) {
@@ -102,10 +98,8 @@ export default {
                     let test = (is_facing_rover >= 135 && is_facing_rover <= 225)
                     console.log("facing", is_facing_rover, " ", test);
                     ar_tag_state = {
-                        frontBack: test,
                         bearing: (bearing - rover_bearing) * 180/Math.PI,
                         distance: dist,
-                        tagBearing: 0
                     };
 
                     break;
@@ -347,23 +341,49 @@ export default {
                 const tag = ar_tags[i];
                 const bcoords = this.to_canvas(this.projection(to_decimal(tag)));
 
-                const bearing = (-tag.tag_direction) * Math.PI / 180;
-
+                const bearing = 0; //(-tag.tag_direction) * Math.PI / 180;
+                const side = 12;
+                const h = side * (Math.sqrt(3)/2);
                 ctx.strokeStyle = 'black';
-                ctx.lineWidth = 5;
-                ctx.beginPath();
-                ctx.moveTo(bcoords.x, bcoords.y);
-                ctx.lineTo(bcoords.x + AR_TAG_SIZE*x_scale*Math.cos(bearing),
-                           bcoords.y - AR_TAG_SIZE*y_scale*Math.sin(bearing));
-                ctx.stroke();
-
-                ctx.strokeStyle = 'white';
+                ctx.fillStyle = 'pink';
                 ctx.lineWidth = 2;
+
                 ctx.beginPath();
-                ctx.moveTo(bcoords.x - 2.5*Math.sin(bearing), bcoords.y - 2.5*Math.cos(bearing));
-                ctx.lineTo(bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),
-                           bcoords.y - 2.5*Math.cos(bearing) - AR_TAG_SIZE*y_scale*Math.sin(bearing));
+                ctx.moveTo(bcoords.x, -h / 2 + bcoords.y);
+                ctx.lineTo( -side / 2 + bcoords.x , h / 2 + bcoords.y);
+                ctx.lineTo(side / 2 + bcoords.x, h / 2 + bcoords.y);
+                ctx.lineTo(bcoords.x, -h / 2 + bcoords.y);
                 ctx.stroke();
+                ctx.fill();
+                ctx.closePath();
+
+                // ctx.moveTo( bcoords.x - 2.5*Math.sin(bearing), 
+                //             -h / 2 + bcoords.y - 2.5*Math.cos(bearing));
+
+                // ctx.lineTo(  -side / 2 + bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),
+                //              h / 2 + bcoords.y - 2.5*Math.cos(bearing) - AR_TAG_SIZE*y_scale*Math.sin(bearing));
+
+                // ctx.lineTo( side / 2 + bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),
+                //             h / 2 + bcoords.y - 2.5*Math.cos(bearing) - AR_TAG_SIZE*y_scale*Math.sin(bearing));
+
+                // ctx.lineTo( bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),
+                //             -h / 2 + bcoords.y - 2.5*Math.cos(bearing) - AR_TAG_SIZE*y_scale*Math.sin(bearing));
+
+                // ctx.strokeStyle = 'black';
+                // ctx.lineWidth = 5;
+                // ctx.beginPath();
+                // ctx.moveTo(bcoords.x, bcoords.y);
+                // ctx.lineTo(bcoords.x + AR_TAG_SIZE*x_scale*Math.cos(bearing),
+                //            bcoords.y - AR_TAG_SIZE*y_scale*Math.sin(bearing));
+                // ctx.stroke();
+
+                // ctx.strokeStyle = 'white';
+                // ctx.lineWidth = 2;
+                // ctx.beginPath();
+                // ctx.moveTo(bcoords.x - 2.5*Math.sin(bearing), bcoords.y - 2.5*Math.cos(bearing));
+                // ctx.lineTo(bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),
+                //            bcoords.y - 2.5*Math.cos(bearing) - AR_TAG_SIZE*y_scale*Math.sin(bearing));
+                // ctx.stroke();
             }
 
             for (let i = 0; i < rocks.length; i++) {

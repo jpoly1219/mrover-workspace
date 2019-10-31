@@ -99,7 +99,7 @@
                             item="{{ ar_tag }}"
                             rover="{{ odom }}"
                             on:click='splice("ar_tags", i, 1)'>
-                {{#if ar_tag.detected}}
+                {{#if ar_tag.distance !== -1}}
                 <b>
                 Found the tag!
                 </b>
@@ -178,10 +178,8 @@
                 current_test: "None",
 
                 ar_tag_state: {
-                    frontBack: false,
                     bearing: 0,
                     distance: -1,
-                    tagBearing: 0
                 },
 
                 obstacle_state: {
@@ -292,22 +290,31 @@
                     this.fire("course", course);
 
                     if (this.get("cv_enabled")) {
-                        let target1 = this.get("ar_tag_state");
-
-                        let target2 = {
-                            frontBack: false,
+                        const target1 = this.get("ar_tag_state");
+                        const target2 = {
                             bearing: 0,
                             distance: -1,
-                            tagBearing: 0
+                        };
+                        
+                        const targets = {target1, target2};
+
+                        let target_list = {
+                            targetList: _.map(targets, (target) => {
+                                return {
+                                    type: "Target",
+                                    bearing: target.bearing,
+                                    distance: target.distance,
+                                }
+                            })
                         };
 
-                        let targets = {
-                            targetList: {target1, target2}
-                        };
                         // let ar_tag_state = this.get("ar_tag_state");
                         // this.fire("ar_tag", ar_tag_state);
-                        console.log(targets);
-                        
+                        // console.log(targets);
+                        console.log(target_list);
+
+                        this.fire("target_list", target_list);
+
                         let obstacle_state = this.get("obstacle_state");
                         this.fire("obstacle", obstacle_state);
                     }

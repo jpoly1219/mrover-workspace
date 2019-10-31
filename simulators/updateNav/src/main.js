@@ -76,11 +76,11 @@ app.on("auton", (auton) => {
     }
 })
 
-app.on("ar_tag", (ar_tag) => {
+app.on("target_list", (target_list) => {
     if (bridge.online) {
-        ar_tag.type = 'Target';
+        target_list.type = 'TargetList';
         // targets.type = 'TargetList';
-        bridge.publish("/target", ar_tag);
+        bridge.publish("/target_list", target_list);
     }
 })
 app.on("obstacle", (obstacle) => {
