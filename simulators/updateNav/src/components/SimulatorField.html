@@ -19,10 +19,13 @@ import { WAYPOINT_MODE, ROCK_MODE, AR_TAG_MODE } from "../constants.js";
 import _ from 'lodash';
 
 const EARTH_RAD = 6371000.0;
+// const ROVER_SIZE = 25;
 const ROVER_SIZE_M = 1;
+// const VECTOR_SIZE = 20;
 const VECTOR_SIZE_M = .75;
 const WAYPOINT_SIZE = 10;
-const AR_TAG_SIZE = 1;
+const TENNIS_BALL_SIZE = 4;
+// const ROCK_SIZE = 25;
 const ROCK_SIZE_M = 1.2;
 const ROVER_FIELD_OF_VIEW = 2*Math.PI/3;
 const ROVER_DEPTH_OF_VIEW = 10;
@@ -42,7 +45,6 @@ export default {
             center_lon: -110.5,
 
             radius_meters: 25,
-            tag_facing: 0,
 
             odom: null,
 
@@ -51,8 +53,9 @@ export default {
             rocks: [],
 
             ar_tag_state: {
-                bearing: 0,
+                detected: false,
                 distance: -1,
+                bearing: 0
             },
 
             obstacle_state: {
@@ -79,29 +82,25 @@ export default {
 
             let tag_detected_idx = -1;
             let ar_tag_state = {
-                bearing: 0,
+                detected: false,
                 distance: -1,
+                bearing: 0
             };
-
             for (let i = 0; i < ar_tags.length; i++) {
                 ar_tags[i].detected = false;
+
                 const { dist, bearing } = dist_and_bearing(
                     to_decimal(odom), to_decimal(ar_tags[i]));
                 const rover_bearing = odom.bearing_deg * Math.PI/180;
 
-                // console.log(`testing a tag at ${dist} meters by ${bearing} radians`);
+                // console.log(`testing a ball at ${dist} meters by ${bearing} radians`);
                 if (Math.abs(bearing - rover_bearing) < ROVER_FIELD_OF_VIEW/2 && dist < ROVER_DEPTH_OF_VIEW) {
                     ar_tags[i].detected = true;
                     tag_detected_idx = i;
-
-                    let is_facing_rover = Math.abs(ar_tags[i].tag_direction - odom.bearing_deg);
-                    let test = (is_facing_rover >= 135 && is_facing_rover <= 225)
-                    console.log("facing", is_facing_rover, " ", test);
                     ar_tag_state = {
-                        bearing: (bearing - rover_bearing) * 180/Math.PI,
                         distance: dist,
+                        bearing: (bearing - rover_bearing) * 180/Math.PI
                     };
-
                     break;
                 }
             }
@@ -267,6 +266,7 @@ export default {
             }
 
             this.set({ obstacle_state });
+
         };
 
         const draw_triangle = (odom) => {
@@ -341,49 +341,23 @@ export default {
                 const tag = ar_tags[i];
                 const bcoords = this.to_canvas(this.projection(to_decimal(tag)));
 
+                ctx.fillStyle = 'pink';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 1;
+
                 const bearing = 0; //(-tag.tag_direction) * Math.PI / 180;
                 const side = 12;
                 const h = side * (Math.sqrt(3)/2);
-                ctx.strokeStyle = 'black';
-                ctx.fillStyle = 'pink';
-                ctx.lineWidth = 2;
 
                 ctx.beginPath();
                 ctx.moveTo(bcoords.x, -h / 2 + bcoords.y);
                 ctx.lineTo( -side / 2 + bcoords.x , h / 2 + bcoords.y);
                 ctx.lineTo(side / 2 + bcoords.x, h / 2 + bcoords.y);
                 ctx.lineTo(bcoords.x, -h / 2 + bcoords.y);
-                ctx.stroke();
+
                 ctx.fill();
+                ctx.stroke();
                 ctx.closePath();
-
-                // ctx.moveTo( bcoords.x - 2.5*Math.sin(bearing),
-                //             -h / 2 + bcoords.y - 2.5*Math.cos(bearing));
-
-                // ctx.lineTo(  -side / 2 + bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),
-                //              h / 2 + bcoords.y - 2.5*Math.cos(bearing) - AR_TAG_SIZE*y_scale*Math.sin(bearing));
-
-                // ctx.lineTo( side / 2 + bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),
-                //             h / 2 + bcoords.y - 2.5*Math.cos(bearing) - AR_TAG_SIZE*y_scale*Math.sin(bearing));
-
-                // ctx.lineTo( bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),
-                //             -h / 2 + bcoords.y - 2.5*Math.cos(bearing) - AR_TAG_SIZE*y_scale*Math.sin(bearing));
-
-                // ctx.strokeStyle = 'black';
-                // ctx.lineWidth = 5;
-                // ctx.beginPath();
-                // ctx.moveTo(bcoords.x, bcoords.y);
-                // ctx.lineTo(bcoords.x + AR_TAG_SIZE*x_scale*Math.cos(bearing),
-                //            bcoords.y - AR_TAG_SIZE*y_scale*Math.sin(bearing));
-                // ctx.stroke();
-
-                // ctx.strokeStyle = 'white';
-                // ctx.lineWidth = 2;
-                // ctx.beginPath();
-                // ctx.moveTo(bcoords.x - 2.5*Math.sin(bearing), bcoords.y - 2.5*Math.cos(bearing));
-                // ctx.lineTo(bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),
-                //            bcoords.y - 2.5*Math.cos(bearing) - AR_TAG_SIZE*y_scale*Math.sin(bearing));
-                // ctx.stroke();
             }
 
             for (let i = 0; i < rocks.length; i++) {
@@ -420,11 +394,7 @@ export default {
                 this.set({ waypoints });
             } else if (draw_mode === AR_TAG_MODE) {
                 let ar_tags = this.get("ar_tags");
-                const tag_angle = this.get("tag_facing");
-                ar_tags.push(
-                    Object.assign({}, to_dms({lat, lon}), { tag_direction: tag_angle})
-                );
-                // ar_tags[ar_tags.length-1].tag_direction = tag_angle;
+                ar_tags.push(to_dms({lat, lon}));
 
                 this.set({ ar_tags });
             } else if (draw_mode === ROCK_MODE) {
@@ -446,7 +416,6 @@ export default {
         this.observe("ar_tags", update);
         this.observe("rocks", update);
         this.observe("radius_meters", update);
-        this.observe("tag_facing", update);
 
         update();
     },
@@ -459,16 +428,6 @@ export default {
             const y_scale = (canvas.height/2)/radius;
             return {
                 x: x*x_scale + canvas.width/2,
-                y: canvas.height/2 - y*y_scale
-            };
-        },
-
-        to_canvas_rect: function({x, y}) {
-            const canvas = this.refs.canvas;
-            const x_scale = (canvas.width/2);
-            const y_scale = (canvas.height/2);
-            return {
-                // x: x*x_scale + canvas.width/2,
                 y: canvas.height/2 - y*y_scale
             };
         },

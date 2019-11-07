@@ -9,16 +9,11 @@
             bind:ar_tag_state
             bind:obstacle_state
             radius_meters="{{radius}}"
-            tag_facing="{{facing}}"
             mode="{{draw_mode}}"/>
     </div>
 
     <div id="drawmode">
         <DrawModeSelector bind:mode="draw_mode"/>
-        <p><label>
-            Tag angle:
-            <input type="number" bind:value="facing"/>
-        </label></p>
         <p><label>
             Field Radius (meters):
             <input type="number" bind:value="radius"/>
@@ -71,7 +66,7 @@
             <p><b>Navigation State:</b> {{ nav_state_name }}</p>
             <p><b>Completed Waypoints:</b> {{ completed_wps }}/{{ total_wps }}</p>
             <p><b>Missed Waypoints:</b> {{ missed_wps }}/{{ total_wps }}</p>
-            <p><b>AR Tag:</b> {{ found_tbs }}/{{ total_tbs }}</p>
+            <p><b>Ar Tags:</b> {{ found_ar_tags }}/{{ total_ar_tags }}</p>
             {{else}}
             <p>LCM not connected.</p>
             {{/if}}
@@ -99,9 +94,9 @@
                             item="{{ ar_tag }}"
                             rover="{{ odom }}"
                             on:click='splice("ar_tags", i, 1)'>
-                {{#if ar_tag.distance !== -1}}
+                {{#if ar_tag.detected}}
                 <b>
-                Found the tag!
+                Found the Tag!
                 </b>
                 {{/if}}
             </SimulatedItemDisplay>
@@ -171,15 +166,15 @@
                 rocks: [],
 
                 radius: 25,
-                facing: 0,
 
                 test: "<name>",
 
                 current_test: "None",
 
                 ar_tag_state: {
-                    bearing: 0,
+                    detected: false,
                     distance: -1,
+                    bearing: 0,
                 },
 
                 obstacle_state: {
@@ -194,8 +189,8 @@
                 completed_wps: 0,
                 missed_wps: 0,
                 total_wps: 0,
-                found_tbs: 0,
-                total_tbs: 0,
+                found_ar_tags: 0,
+                total_ar_tags: 0,
 
                 enabled: false,
                 cv_enabled: true,
@@ -304,8 +299,6 @@
                                 }
                             })
                         };
-                        console.log(target_list);
-
                         this.fire("target_list", target_list);
 
                         let obstacle_state = this.get("obstacle_state");
@@ -315,7 +308,6 @@
             },
             splice
         },
-
         components: {
             SimulatorField,
             DrawModeSelector,
