@@ -93,7 +93,7 @@ export default {
                 if (Math.abs(bearing - rover_bearing) < ROVER_FIELD_OF_VIEW/2 && dist < ROVER_DEPTH_OF_VIEW) {
                     ar_tags[i].detected = true;
                     tag_detected_idx = i;
-                    
+
                     let is_facing_rover = Math.abs(ar_tags[i].tag_direction - odom.bearing_deg);
                     let test = (is_facing_rover >= 135 && is_facing_rover <= 225)
                     console.log("facing", is_facing_rover, " ", test);
@@ -357,7 +357,7 @@ export default {
                 ctx.fill();
                 ctx.closePath();
 
-                // ctx.moveTo( bcoords.x - 2.5*Math.sin(bearing), 
+                // ctx.moveTo( bcoords.x - 2.5*Math.sin(bearing),
                 //             -h / 2 + bcoords.y - 2.5*Math.cos(bearing));
 
                 // ctx.lineTo(  -side / 2 + bcoords.x - 2.5*Math.sin(bearing) + AR_TAG_SIZE*x_scale*Math.cos(bearing),

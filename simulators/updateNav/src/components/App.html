@@ -16,7 +16,7 @@
     <div id="drawmode">
         <DrawModeSelector bind:mode="draw_mode"/>
         <p><label>
-            Tag angle: 
+            Tag angle:
             <input type="number" bind:value="facing"/>
         </label></p>
         <p><label>
@@ -295,11 +295,8 @@
                             bearing: 0,
                             distance: -1,
                         };
-                        
-                        const targets = {target1, target2};
-
                         let target_list = {
-                            targetList: _.map(targets, (target) => {
+                            targetList: _.map({target1, target2}, (target) => {
                                 return {
                                     type: "Target",
                                     bearing: target.bearing,
@@ -307,10 +304,6 @@
                                 }
                             })
                         };
-
-                        // let ar_tag_state = this.get("ar_tag_state");
-                        // this.fire("ar_tag", ar_tag_state);
-                        // console.log(targets);
                         console.log(target_list);
 
                         this.fire("target_list", target_list);
@@ -322,7 +315,7 @@
             },
             splice
         },
-        
+
         components: {
             SimulatorField,
             DrawModeSelector,
