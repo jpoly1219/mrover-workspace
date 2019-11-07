@@ -206,7 +206,8 @@ NavState SearchStateMachine::executeSearchDrive( Rover* phoebe )
 // Else the rover continues to turn to to the target.
 NavState SearchStateMachine::executeTurnToTarget( Rover* phoebe )
 {
-    if( !phoebe->roverStatus().target().distance != -1 )
+    std::cout << phoebe->roverStatus().target().distance << std::endl;
+    if( phoebe->roverStatus().target().distance < 0 )
     {
         cerr << "Lost the target. Continuing to turn to last known angle\n";
         if( phoebe->turn( mTargetAngle + mTurnToTargetRoverAngle ) )
@@ -234,7 +235,7 @@ NavState SearchStateMachine::executeTurnToTarget( Rover* phoebe )
 // Else, it turns back to face the target.
 NavState SearchStateMachine::executeDriveToTarget( Rover* phoebe, const rapidjson::Document& roverConfig )
 {
-    if( !phoebe->roverStatus().target().distance != -1 )
+    if( phoebe->roverStatus().target().distance < 0 )
     {
         cerr << "Lost the target\n";
         return NavState::SearchTurn; //NavState::SearchSpin
