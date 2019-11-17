@@ -5,6 +5,7 @@
             bind:odom
             bind:waypoints
             bind:ar_tags
+            bind:gates
             bind:rocks
             bind:ar_tag_state
             bind:obstacle_state
@@ -91,15 +92,44 @@
         <div class="display ar_tag_display">
             <SimulatedItemDisplay
                             title="Tag {{ i }}"
-                            item="{{ ar_tag }}"
+                            item="{{ ar_tag[0] }}"
                             rover="{{ odom }}"
                             on:click='splice("ar_tags", i, 1)'>
-                {{#if ar_tag.detected}}
+                {{#if ar_tag[0].detected}}
                 <b>
                 Found the Tag!
                 </b>
                 {{/if}}
             </SimulatedItemDisplay>
+        </div>
+        {{/each}}
+
+        {{#each gates as gate, i}}
+        <div class="display ar_tag_display">
+            <SimulatedItemDisplay
+                            title="Post {{ i }}, 0"
+                            item="{{ gate[0] }}"
+                            rover="{{ odom }}"
+                            on:click='splice("gates", i, 1)'>
+                {{#if gate[0].detected}}
+                <b>
+                Found the Post!
+                </b>
+                {{/if}}
+            </SimulatedItemDisplay>
+
+            <SimulatedItemDisplay
+                            title="Post {{ i }}, 1"
+                            item="{{ gate[1] }}"
+                            rover="{{ odom }}"
+                            on:click='splice("gates", i, 1)'>
+                {{#if gate[1].detected}}
+                <b>
+                Found the Gate!
+                </b>
+                {{/if}}
+            </SimulatedItemDisplay>
+
         </div>
         {{/each}}
 
@@ -136,7 +166,7 @@
     import SimulatorField from './SimulatorField.html';
     import DrawModeSelector from './DrawModeSelector.html';
     import SimulatedItemDisplay from './SimulatedItemDisplay.html';
-    import { WAYPOINT_MODE, ROCK_MODE, AR_TAG_MODE } from "../constants.js";
+    import { WAYPOINT_MODE, ROCK_MODE, AR_TAG_MODE, GATE_MODE } from "../constants.js";
     import { to_dms } from '../geography.js';
 
     const NUM_DIGITS = 7;
@@ -163,6 +193,7 @@
 
                 waypoints: [],
                 ar_tags: [],
+                gates: [],
                 rocks: [],
 
                 radius: 25,
@@ -285,13 +316,11 @@
                     this.fire("course", course);
 
                     if (this.get("cv_enabled")) {
-                        const target1 = this.get("ar_tag_state");
-                        const target2 = {
-                            bearing: 0,
-                            distance: -1,
-                        };
+                        const targets = this.get("ar_tag_state");
+                        console.log("targets fire", targets);
+
                         let target_list = {
-                            targetList: _.map({target1, target2}, (target) => {
+                            targetList: _.map(targets, (target) => {
                                 return {
                                     type: "Target",
                                     bearing: target.bearing,
