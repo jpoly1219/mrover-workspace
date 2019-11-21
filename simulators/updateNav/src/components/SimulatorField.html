@@ -158,6 +158,7 @@ export default {
                 const { dist_1, bearing_1 } = dist_and_bearing(
                     to_decimal(odom), to_decimal(gates[i][1]));
 
+                console.log("post 0");
                 // console.log(`testing a ball at ${dist} meters by ${bearing} radians`);
                 if (Math.abs(bearing - rover_bearing) < ROVER_FIELD_OF_VIEW/2 && dist < ROVER_DEPTH_OF_VIEW) {
                     gates[i][0].detected = true;
@@ -169,15 +170,36 @@ export default {
                     };
                 }
 
+                console.log("post 1");
+                console.log(Math.abs(bearing_1 - rover_bearing) < ROVER_FIELD_OF_VIEW/2);
+                console.log(dist_1 < ROVER_DEPTH_OF_VIEW);
                 // console.log(`testing a ball at ${dist} meters by ${bearing} radians`);
                 if (Math.abs(bearing_1 - rover_bearing) < ROVER_FIELD_OF_VIEW/2 && dist_1 < ROVER_DEPTH_OF_VIEW) {
+                    console.log("close enough to rover!!");
+
                     gates[i][1].detected = true;
                     gate_detected_idx = i;
 
-                    ar_tag_state[1] = {
-                        distance: dist,
-                        bearing: (bearing - rover_bearing) * 180/Math.PI
-                    };
+                    if (!ar_tag_state[0].detected)
+                    {
+                        let post = gates[i][0];
+                        gates[i][0] = gates[i][1];
+                        gates[i][1] = post;
+
+                        console.log("setting state in 0");
+                        ar_tag_state[0] = {
+                            distance: dist,
+                            bearing: (bearing - rover_bearing) * 180/Math.PI
+                        };
+                    }
+                    else
+                    {
+                        console.log("in here");
+                        ar_tag_state[1] = {
+                            distance: dist,
+                            bearing: (bearing - rover_bearing) * 180/Math.PI
+                        };
+                    }
                 }
 
                 if (gate_detected_idx != -1)
@@ -509,7 +531,7 @@ export default {
             if (draw_mode === WAYPOINT_MODE) {
                 let waypoints = this.get("waypoints");
                 waypoints.push(
-                    Object.assign({}, to_dms({lat, lon}), { search: false })
+                    Object.assign({}, to_dms({lat, lon}), { search: false }, { gate: false })
                 );
 
                 this.set({ waypoints });

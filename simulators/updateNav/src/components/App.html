@@ -83,6 +83,8 @@
                 <p>
                     <input type="checkbox" id="search_checkbox_{{ i }}" bind:checked="waypoint.search">
                     <label for="search_checkbox_{{ i }}">Search?</label>
+                    <input type="checkbox" id="gate_checkbox_{{ i }}" bind:checked="waypoint.gate">
+                    <label for="gate_checkbox_{{ i }}">Gate?</label>
                 </p>
             </SimulatedItemDisplay>
         </div>
@@ -301,6 +303,7 @@
                             return {
                                 type: "Waypoint",
                                 search: waypoint.search,
+                                gate: waypoint.gate,
                                 odom: {
                                     latitude_deg: waypoint.latitude_deg|0,
                                     latitude_min: waypoint.latitude_min,
@@ -312,6 +315,7 @@
                             }
                         })
                     };
+
                     course.hash = fnv.fast1a52(JSON.stringify(course));
                     this.fire("course", course);
 
