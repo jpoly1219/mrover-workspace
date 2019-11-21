@@ -1,17 +1,17 @@
 <template>
   <div class="wrap">
-    <!-- Map goes here -->
+    <!-- Map goes here       -->
 
-    <l-map ref="map" class="map" :zoom="15" :center="center">
+    <l-map v-on:click="setMouseCoords" ref="map" class="map" :zoom="15" :center="center">
       <l-control-scale :imperial="false"/>
       <l-tile-layer :url="url" :attribution="attribution"/>
       <l-marker ref="rover" :lat-lng="odomLatLng" :icon="locationIcon"/>
-      <l-marker :lat-lng="waypoint.latLng" :icon="waypointIcon" v-for="waypoint in route" :key="waypoint.id">
-        <l-tooltip :content="waypoint.name" />
+      <l-marker :lat-lng="waypoint.latLng" :icon="waypointIcon" v-for="(waypoint,index) in route" :key="waypoint.id">
+        <l-tooltip :options="{ permanent: 'true', direction: 'center'}"> {{ index }} </l-tooltip>
       </l-marker>
 
-      <l-marker :lat-lng="waypoint.latLng" :icon="waypointIcon" v-for="waypoint in list" :key="waypoint.id">
-        <l-tooltip :content="waypoint.name" />
+      <l-marker :lat-lng="waypoint.latLng" :icon="waypointIcon" v-for="(waypoint,index) in list" :key="waypoint.id">
+        <l-tooltip :options="{ permanent: 'true', direction: 'center'}"> {{ index }} </l-tooltip>
       </l-marker>
       
       <l-polyline :lat-lngs="polylinePath" :color="'red'" :dash-array="'5, 5'"/>
@@ -25,6 +25,7 @@
 import { LMap, LTileLayer, LMarker, LPolyline, LPopup, LTooltip, LControlScale } from 'vue2-leaflet'
 import { mapGetters } from 'vuex'
 import L from '../leaflet-rotatedmarker.js'
+import { eventBus } from "../app.js"
 
 const MAX_ODOM_COUNT = 1000
 const DRAW_FREQUENCY = 10
@@ -81,7 +82,11 @@ export default {
       map: null,
       odomCount: 0,
       locationIcon: null,
-      odomPath: []
+      odomPath: [],
+      options: {
+        type: Object,
+        default: () => ({})
+      }
     }
   },
 
@@ -116,6 +121,18 @@ export default {
       }
 
       this.odomPath[this.odomPath.length - 1] = L.latLng(lat, lng)
+    }
+  },
+
+  methods: {
+    setMouseCoords: function(event){
+      console.log("you clicked on the map!");
+      //let latLon = map.mouseEventToLatLng(event.latlng);
+      let coord = event.latlng;
+      let coords = [coord.lat, coord.lng];
+      console.log(coords[0] + ", " + coords[1]);
+      //this.eventBus.$emit('mouseCoords', coords);
+      this.$root.$emit("e", coords);
     }
   },
 

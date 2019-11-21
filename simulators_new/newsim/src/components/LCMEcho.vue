@@ -22,7 +22,7 @@
     </div>
     <div class="box messagefeed" ref="messagefeed">
       <ul id="feed">
-        <li v-for="(msg, i) in messages" :key="i">
+        <li v-for="msg, i in messages" :key="i">
           {{ msg }}
         </li>
       </ul>

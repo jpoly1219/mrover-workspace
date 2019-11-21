@@ -10,6 +10,7 @@ const getters = {
   route: state => state.route,
   waypointList: state => state.waypointList,
   autonEnabled: state => state.autonEnabled
+
 }
 
 // mutations
@@ -24,7 +25,12 @@ const mutations = {
 
   setWaypointList (commit, newList) {
     state.waypointList = newList
-  }
+  },
+  
+  /*setWaypointCheckbox(commit, val){
+    console.log("setWPCheckbox" + val)
+    state.waypointCheckbox = val
+  }*/
 }
 
 export default {

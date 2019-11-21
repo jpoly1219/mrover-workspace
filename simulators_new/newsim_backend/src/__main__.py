@@ -7,8 +7,10 @@ from rover_common import aiolcm
 import asyncio
 from rover_common.aiohelper import run_coroutines
 # from rover_msgs import DanesMsg
-from rover_msgs import Ping, Obstacle
-# NavStatus, Joystick, GPS, AutonState, Course, Obstacle, TennisBall
+from rover_msgs import (
+    Ping, Obstacle, TennisBall, NavStatus,
+    Joystick, GPS, AutonState, Course
+)
 # import mathUtils
 
 # 0. Grab from LCM, or whatever intermediary
@@ -39,18 +41,7 @@ class SimulatorMetaClass:
         # all initially defined variables should be here
         # while not technically globals, this is basically where they are
         # defined for the sim, since the entire instance is the SimMetaClass
-        """
-        xCoord = 0.0
-        yCoord = 0.0
-        theta = 0.0
-        r = 0.0
-        fovAngle = 0.0
 
-        rover = [xCoord, yCoord, theta]
-        fov = [r, fovAngle]
-        rover[0] = math.atan(1/pow(2, 0.5))
-        fov[0] = math.atan(-1/pow(2, 0.5))
-        """
         # below: class list, one class for each message type
         # published or recieved. instantiate them at the bottom
         # of this message definition block
@@ -60,29 +51,31 @@ class SimulatorMetaClass:
         self.PingMsg.test = 1.0
 
         self.ObstacleMsg = Obstacle()
-        self.ObstacleMsg.detected = False
+        self.ObstacleMsg.detected = 0
         self.ObstacleMsg.bearing = 0.0
         self.ObstacleMsg.distance = 0.0
-        """
-        self.NavStatusMsg = NavStatus()
-        self.JoystickMsg = Joystick()
-        # self.GPSMsg = GPS()
-        # self.BearingMsg = Bearing()
-        self.GPSMsg = GPS()
-        self.ObstacleMsg = Obstacle()
-        self.TennisBallMsg = TennisBall()
-        self.CourseMsg = Course()
-        self.AutonStateMsg = AutonState()
 
+        self.TennisBallMsg = TennisBall()
+        self.TennisBallMsg.found = 0
+        self.TennisBallMsg.bearing = 0
+        self.TennisBallMsg.distance = -1
+
+        self.NavStatusMsg = NavStatus()
         self.NavStatusMsg.nav_state = 0
         self.NavStatusMsg.completed_wps = 0
         self.NavStatusMsg.missed_wps = 0
         self.NavStatusMsg.total_wps = 0
+        self.NavStatusMsg.found_tbs = 0
+        self.NavStatusMsg.total_tbs = 0
 
+        self.JoystickMsg = Joystick()
         self.JoystickMsg.forward_back = 0
         self.JoystickMsg.left_right = 0
         self.JoystickMsg.dampen = 0
+        self.JoystickMsg.kill = 0
+        self.JoystickMsg.restart = 0
 
+        self.GPSMsg = GPS()
         self.GPSMsg.latitude_deg = 39
         self.GPSMsg.latitude_min = 0
         self.GPSMsg.longitude_deg = -110
@@ -91,18 +84,14 @@ class SimulatorMetaClass:
         self.GPSMsg.speed = -999  # this value is never used
         # so it's being set to a dummy value. DO NOT USE IT
 
-        self.ObstacleMsg.detected = 0
-        self.ObstacleMsg.bearing = 0
+        self.AutonStateMsg = AutonState()
+        self.AutonStateMsg.is_auton = False
 
-        self.TennisBallMsg.bearing = 0
-        self.TennisBallMsg.distance = -1
-
-        self.CourseMsg.num_waypoints = 0
+        self.CourseMsg = Course()
+        self.num_waypoints = 0
         self.CourseMsg.hash = 0
         self.CourseMsg.waypoints = []
 
-        self.AutonStateMsg.is_auton = False
-        """
     # definitions for message processing are below, with callbacks (cb)
     # at the top and publishing at the bottom
     # in this setup, camelCasing denotes a class instance
@@ -112,14 +101,58 @@ class SimulatorMetaClass:
     def ping_cb(self, channel, msg):
         m = Ping.decode(msg)
         self.PingMsg.test = m.test
-        print(m.test)
+        # print(m.test)
 
     def obstacle_cb(self, channel, msg):
         m = Obstacle.decode(msg)
         self.ObstacleMsg.detected = m.detected
         self.ObstacleMsg.bearing = m.bearing
         self.ObstacleMsg.distance = m.distance
-        print(m.bearing)
+        # print(m.bearing)
+
+    def tennisball_cb(self, channel, msg):
+        m = TennisBall.decode(msg)
+        self.TennisBallMsg.found = m.found
+        self.TennisBallMsg.bearing = m.bearing
+        self.TennisBallMsg.distance = m.distance
+
+    def navstatus_cb(self, channel, msg):
+        m = NavStatus.decode(msg)
+        self.NavStatusMsg.nav_state = m.nav_state
+        self.NavStatusMsg.completed_wps = m.completed_wps
+        self.NavStatusMsg.missed_wps = m.missed_wps
+        self.NavStatusMsg.total_wps = m.total_wps
+        self.NavStatusMsg.found_tbs = m.found_tbs
+        self.NavStatusMsg.total_tbs = m.total_tbs
+
+    def joystick_cb(self, channel, msg):
+        m = Joystick.decode(msg)
+        self.JoystickMsg.forward_back = m.forward_back
+        self.JoystickMsg.left_right = m.left_right
+        self.JoystickMsg.dampen = m.dampen
+        # 1-dampen/2
+        self.JoystickMsg.kill = m.kill
+        self.JoystickMsg.restart = m.restart
+
+    def gps_cb(self, channel, msg):
+        m = GPS.decode(msg)
+        self.GPSMsg.latitude_deg = m.latitude_deg
+        self.GPSMsg.latitude_min = m.latitude_min
+        self.GPSMsg.longitude_deg = m.longitude_deg
+        self.GPSMsg.longitude_min = m.longitude_min
+        self.GPSMsg.bearing_deg = m.bearing_deg
+        self.GPSMsg.speed = m.speed
+
+    def autonstate_cb(self, channel, msg):
+        m = AutonState.decode(msg)
+        self.AutonStateMsg.is_auton = m.is_auton
+        print(m.is_auton)
+
+    def course_cb(self, channel, msg):
+        m = Course.decode(msg)
+        self.CourseMsg.num_waypoints = m.num_waypoints
+        self.CourseMsg.hash = m.hash
+        self.CourseMsg.waypoints = m.waypoints
 
     async def publish_ping(self, lcm):
         while True:
@@ -131,27 +164,42 @@ class SimulatorMetaClass:
             lcm.publish("/obstacle", self.ObstacleMsg.encode())
             await asyncio.sleep(10)
 
+    async def publish_tennisball(self, lcm):
+        while True:
+            lcm.publish("/tennisball", self.TennisBallMsg.encode())
+            await asyncio.sleep(10)
+
+    async def publish_navstatus(self, lcm):
+        while True:
+            lcm.publish("/navstatus", self.NavStatusMsg.encode())
+            await asyncio.sleep(10)
+
+    async def publish_joystick(self, lcm):
+        while True:
+            lcm.publish("/joystick", self.JoystickMsg.encode())
+            await asyncio.sleep(10)
+
+    async def publish_gps(self, lcm):
+        while True:
+            lcm.publish("/gps", self.GPSMsg.encode())
+            await asyncio.sleep(10)
+
+    async def publish_autonstate(self, lcm):
+        while True:
+            lcm.publish("/autonstate", self.AutonStateMsg.encode())
+            await asyncio.sleep(10)
+
+    async def publish_course(self, lcm):
+        while True:
+            lcm.publish("/course", self.CourseMsg.encode())
+            await asyncio.sleep(10)
+
     """
     def nav_test(self, channel, msg):
         pass
         # define this as per the spec
 
     # callback function: takes in variable from LCM, sets values locally
-    def nav_state_cb(self, channel, msg):
-        m = NavStatus.decode(msg)
-        self.NavStatusMsg.nav_state = m.nav_state
-        self.NavStatusMsg.completed_wps = m.completed_wps
-        self.NavStatusMsg.missed_wps = m.missed_wps
-        self.NavStatusMsg.total_wps = m.total_wps
-
-    def joystick_cb(self, channel, msg):
-        m = Joystick.decode(msg)
-        self.JoystickMsg.forward_back = m.forward_back
-        self.JoystickMsg.left_right = m.left_right
-        self.JoystickMsg.dampen = m.dampen
-        # 1-dampen/2
-        self.JoystickMsg.kill = m.kill
-        self.JoystickMsg.restart = m.restart
 
     # async def publish_bearing(self, lcm):
     #     while True:
@@ -185,9 +233,9 @@ class SimulatorMetaClass:
             lcm.publish("\obstacle", self.ObstacleMsg.encode())
             await asyncio.sleep(10)
 
-    async def publish_tennis_ball(self, lcm):
+    async def publish_tennisball(self, lcm):
         while True:
-            lcm.publish("\tennis_ball", self.TennisBallMsg.encode())
+            lcm.publish("/tennisball", self.TennisBallMsg.encode())
             await asyncio.sleep(10)
     """
     # SimObject definitions are below
@@ -208,7 +256,13 @@ class SimulatorMetaClass:
             self.detectedbool = detected
             self.bearingdouble = bearing
             self.distancedouble = distance
-    """
+
+    class TennisBall:
+        def __init__(self, found, bearing, distance):
+            self.foundbool = found
+            self.bearingdouble = bearing
+            self.distancedouble = distance
+
     class GPS:
         def __init__(self, latitude_deg, latitude_min, longitude_deg,
                      longitude_min, bearing_deg, speed):
@@ -219,9 +273,38 @@ class SimulatorMetaClass:
             self.bearing = bearing_deg
             self.speed = speed
 
+    class NavStatus:
+        def __init__(self, nav_state, completed_wps, missed_wps,
+                     total_wps, found_tbs, total_tbs):
+            self.nav_state = nav_state
+            self.completed_wps = completed_wps
+            self.missed_wps = missed_wps
+            self.total_wps = total_wps
+            self.found_tbs = found_tbs
+            self.total_tbs = total_tbs
+
+    class Joystick:
+        def __init__(self, forward_back, left_right, dampen,
+                     kill, restart):
+            self.forward_back = forward_back
+            self.left_right = left_right
+            self.dampen = dampen
+            self.kill = kill
+            self.restart = restart
+
+    class AutonState:
+        def __init__(self, is_auton):
+            self.is_auton = is_auton
+
+    class Course:
+        def __init__(self, num_waypoints, hash, waypoints):
+            self.num_waypoints = num_waypoints
+            self.hash = hash
+            self.waypoints = waypoints
+
     # parent class of sim objects. Has all properties common to all
     # objects
-
+    """
     class SimObj(ABC):
         # define initial location and other properties
         def __init__(self, GPS):
@@ -284,9 +367,17 @@ def main():
     # instantiates Simulator class
     Simulator = SimulatorMetaClass()
 
+    Ping, Obstacle, TennisBall, NavStatus,
+    Joystick, GPS, AutonState, Course, Obstacle
     # constantly queries lcm server
     lcm.subscribe("/ping", Simulator.ping_cb)
     lcm.subscribe("/obstacle", Simulator.obstacle_cb)
+    lcm.subscribe("/tennisball", Simulator.tennisball_cb)
+    lcm.subscribe("/navstatus", Simulator.navstatus_cb)
+    lcm.subscribe("/joystick", Simulator.joystick_cb)
+    lcm.subscribe("/gps", Simulator.gps_cb)
+    lcm.subscribe("/autonstate", Simulator.autonstate_cb)
+    lcm.subscribe("/course", Simulator.course_cb)
     # lcm.subscribe("\nav_state", Simulator.nav_state_cb)
     # lcm.subscribe("\drive_control", Simulator.joystick_cb)
 
@@ -294,14 +385,20 @@ def main():
     run_coroutines(
         lcm.loop(),
         Simulator.publish_ping(lcm),
-        Simulator.publish_obstacle(lcm)
+        Simulator.publish_obstacle(lcm),
+        Simulator.publish_tennisball(lcm),
+        Simulator.publish_navstatus(lcm),
+        Simulator.publish_joystick(lcm),
+        Simulator.publish_gps(lcm),
+        Simulator.publish_autonstate(lcm),
+        Simulator.publish_course(lcm)
         # runSimulator(Simulator)
     )
     # Simulator.publish_auton_state(lcm),
     # Simulator.publish_course(lcm),
     # Simulator.publish_GPS(lcm),
     # Simulator.publish_obstacle(lcm),
-    # Simulator.publish_tennis_ball(lcm),
+    # Simulator.publish_tennisball(lcm),
     # runSimulator(Simulator))
 
     # as a general improvement, it may be worth threading all of the

@@ -1,33 +1,27 @@
 <template>
-  <div class="wrap">
+  <div v-on:click="setMouseCoords" class="wrap">
     <!-- Map goes here -->
-    <canvas v-on:click="coordOut" id="map"></canvas>
+
+    <l-map ref="map" class="map" :zoom="15" :center="center">
+      <l-control-scale :imperial="false"/>
+      <l-tile-layer :url="url" :attribution="attribution"/>
+      <l-marker ref="rover" :lat-lng="odomLatLng" :icon="locationIcon"/>
+      <l-marker :lat-lng="waypoint.latLng" :icon="waypointIcon" v-for="waypoint in route" :key="waypoint.id">
+        <l-tooltip :content="waypoint.name" />
+      </l-marker>
+
+      <l-marker :lat-lng="waypoint.latLng" :icon="waypointIcon" v-for="waypoint in list" :key="waypoint.id">
+        <l-tooltip :content="waypoint.name" />
+      </l-marker>
+      
+      <l-polyline :lat-lngs="polylinePath" :color="'red'" :dash-array="'5, 5'"/>
+      <l-polyline :lat-lngs="odomPath" :color="'blue'"/>
+    </l-map>
+
   </div>
 </template>
 
 <script>
-
-  /*function writeMsg(canvas, msg){
-    var context = canvas.getContext('2d');
-    context.clearRect(0,0, canvas.width, canvas.height);
-    context.fillText(msg,10,25);
-  }
-  function getMousePos(canvas, event){sss
-    var rect = canvas.getBoundingClientRect();
-    return{
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top
-    };
-  }
-  var canvas = document.getElementById("map");
-  var context = canvas.getContext('2d');
-
-  canvas.addEventListener('click', function(event){
-    var mousePos = getMousePos(canvas, event);
-    var msg = 'Mouse Position: ' + mousePos.x + ', ' + mousePos.y;
-    writeMsg(canvas, msg);
-  }, false);*/
-
 import { LMap, LTileLayer, LMarker, LPolyline, LPopup, LTooltip, LControlScale } from 'vue2-leaflet'
 import { mapGetters } from 'vuex'
 import L from '../leaflet-rotatedmarker.js'
@@ -39,7 +33,13 @@ export default {
   name: 'RoverMap',
 
   components: {
-
+    LMap,
+    LTileLayer,
+    LMarker,
+    LPolyline,
+    LPopup,
+    LTooltip,
+    LControlScale
   },
 
   created: function () {
@@ -72,9 +72,6 @@ export default {
   },
 
   data () {
-
-    map: []
-
     return {
       center: L.latLng(38.406371, -110.791954),
       url: '/static/map/{z}/{x}/{-y}.png',
@@ -84,9 +81,10 @@ export default {
       map: null,
       odomCount: 0,
       locationIcon: null,
-      odomPath: []
+      odomPath: [],
+      clickLat: -1,
+      clickLon: -1
     }
-    
   },
 
   props: {
@@ -123,23 +121,10 @@ export default {
     }
   },
 
-  methods: {
-    coordOut: function(event){
-      var canvas = document.getElementById('map');
-      var ctx = canvas.getContext('2d');
-      var map = canvas.getBoundingClientRect();
-      console.log('test_msg');
-      var xCoord = event.clientX - map.left;
-      var yCoord = -(event.clientY - map.bottom);
-      console.log('x: ' + xCoord + ', y: ' + yCoord);
-      
-      //draw objects on click
-      ctx.fillStyle = "#138746";
-      ctx.fillRect(xCoord, yCoord, 20, 20);
-
-
-  },
-
+  methods:  {
+    setMouseCoords: function(event){
+      console.log("you clicked on the map!");
+    }
   },
 
   mounted: function () {
@@ -152,10 +137,9 @@ export default {
 </script>
 
 <style scoped>
-#map {
+.map {
   height: 100%;
   width: 100%;
-   background-color:#102837;
 }
 
 .wrap {

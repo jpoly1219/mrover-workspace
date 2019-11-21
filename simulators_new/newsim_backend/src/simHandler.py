@@ -2,7 +2,10 @@
 import asyncio
 import math
 from . import mathUtils
-# Globals List:
+# TODO:
+# - detect object > done!
+# - detect obstacle > working on it
+# - update rover coords > working on it
 
 
 # contains the initialization code for initial setup of the field
