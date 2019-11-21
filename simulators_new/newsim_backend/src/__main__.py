@@ -7,6 +7,7 @@ from rover_common import aiolcm
 import asyncio
 from rover_common.aiohelper import run_coroutines
 # from rover_msgs import DanesMsg
+<<<<<<< HEAD
 from rover_msgs import (
     Ping, Obstacle, TennisBall, NavStatus,
     Joystick, GPS, AutonState, Course
@@ -30,6 +31,11 @@ from rover_msgs import (
 # 4. PROFIT!!!
 
 # Algorithm, LCM
+=======
+from rover_msgs import Ping, Obstacle
+# NavStatus, Joystick, GPS, AutonState, Course, Obstacle, TennisBall
+# from . import mathUtils
+>>>>>>> f1100fe9aaf6027b49db699c686b868e5a7e6e96
 
 
 class SimulatorMetaClass:
@@ -412,42 +418,3 @@ def main():
 # also necessary for the build system, idk why
 if __name__ == "__main__":
     main()
-
-"""
-TODO: Convert to python
-
-Accepts (x1, y1, theta) as the robot's pose,
-and (x2, y2) as the point's location
-Program knows the FOV's angle and range
-
-Step (1): Checks to make sure point is within the radius of the view
-        float distance = sqrt((x1 - x2)*(x1 - x2) +
-        (y1 - y2)*(y1 - y2));
-        if (distance > radius) {
-            return false;
-        }
-
-Step (2): Check to make sure the point is within the angle range
-        float max = theta + fovAngle/2;
-        float min = theta - fovAngle/2;
-        if (x1 == 0) {
-            angle = 0;
-        }
-        else {
-            float angle = atan(y2/x1);
-        }
-        if ((angle < max) || (angle > min)) {
-            return true;
-        }
-        else if ((angle + 180 < max) || (angle + 180 > min)) {
-            return true;
-        }
-        else if ((angle - 180 < max) || (angle - 180 > min)) {
-            return true;
-        }
-        else {
-            return false;
-        }
-        TODO: Make if-else checking behavior more elegant (and correct)
-        once trig function behavior is known
-"""
