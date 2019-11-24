@@ -556,7 +556,7 @@ export default {
 
                 let post_1 = to_dms({lat, lon});
                 post_1.detected = false;
-                let post_2 = this.shift_x_meters({lat, lon}, 3);
+                let post_2 = this.shift_x_meters({lat, lon}, 3, 0);
 
                 gates.push([post_1, post_2]);
                 this.set({ gates });
@@ -624,16 +624,29 @@ export default {
             }, coords);
         },
 
-        shift_x_meters: function({lat, lon}, shift) {
-            let change = shift * 0.0000089;
-            let new_lat = lat + change;
-            let new_lon = lon + change / Math.cos(lat * 0.018);
+    // let lat2 = asin(sin(lat1) * cos(distRadians) + cos(lat1) * sin(distRadians) * cos(bearing))
+    // let lon2 = lon1 + atan2(sin(bearing) * sin(distRadians) * cos(lat1), cos(distRadians) - sin(lat1) * sin(lat2))
+
+        shift_x_meters: function({lat, lon}, shift, bearing) {
+
+            let lat1 = lat * Math.PI / 180
+            let lon1 = lon * Math.PI / 180
+
+            var rbearing = bearing * Math.PI / 180.0
+
+            let distRadians = shift / EARTH_RAD;
+
+            let lat2 = Math.asin(Math.sin(lat1) * Math.cos(distRadians) + Math.cos(lat1) * Math.sin(distRadians) * Math.cos(rbearing));
+            let lon2 = lon1 + Math.atan2(Math.sin(rbearing) * Math.sin(distRadians) * Math.cos(lat1), Math.cos(distRadians) - Math.sin(lat1) * Math.sin(lat2));
+            lat2 *= 180 / Math.PI;
+            lon2 *= 180 / Math.PI;
+
             return {
                 detected: false,
-                latitude_deg: Math.trunc(new_lat),
-                latitude_min: (new_lat % 1)*60,
-                longitude_deg: Math.trunc(new_lon),
-                longitude_min: (new_lon % 1)*60
+                latitude_deg: Math.trunc(lat2),
+                latitude_min: (lat2 % 1)*60,
+                longitude_deg: Math.trunc(lon2),
+                longitude_min: (lon2 % 1)*60
             };
         },
 
