@@ -2,3 +2,7 @@ the waypoints in frontend are communicated via Course.lcm
 the obstacles in frontend are communicated via __to_be_added__.lcm
 ask elizabeth about the ARTag lcm
 backend-frontend communication via... lcm for now, but look into other methods
+
+check these githubs:
+- elgarber
+- longj724

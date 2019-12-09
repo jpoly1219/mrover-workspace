@@ -1,0 +1,10 @@
+package rover_msgs;
+
+struct NewsimData {
+    int32_t wpIndex;
+    double waypointCoord[index][2];
+    vector<vector<double>> tagCoord;
+    vector<vector<double>> gate1Coord;
+    vector<vector<double>> gate2Coord;
+    vector<vector<double>> obstacleCoord;
+}

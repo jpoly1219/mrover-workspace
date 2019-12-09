@@ -7,10 +7,10 @@ from rover_common import aiolcm
 import asyncio
 from rover_common.aiohelper import run_coroutines
 # from rover_msgs import DanesMsg
-<<<<<<< HEAD
 from rover_msgs import (
     Ping, Obstacle, TennisBall, NavStatus,
-    Joystick, GPS, AutonState, Course
+    Joystick, GPS, AutonState, Course,
+    Odometry, Waypoint, Target, NewsimData
 )
 # import mathUtils
 
@@ -31,11 +31,6 @@ from rover_msgs import (
 # 4. PROFIT!!!
 
 # Algorithm, LCM
-=======
-from rover_msgs import Ping, Obstacle
-# NavStatus, Joystick, GPS, AutonState, Course, Obstacle, TennisBall
-# from . import mathUtils
->>>>>>> f1100fe9aaf6027b49db699c686b868e5a7e6e96
 
 
 class SimulatorMetaClass:
@@ -94,9 +89,34 @@ class SimulatorMetaClass:
         self.AutonStateMsg.is_auton = False
 
         self.CourseMsg = Course()
-        self.num_waypoints = 0
+        self.CourseMsg.num_waypoints = 0
         self.CourseMsg.hash = 0
         self.CourseMsg.waypoints = []
+
+        self.OdometryMsg = Odometry()
+        self.OdometryMsg.latitude_deg = 50
+        self.OdometryMsg.latitude_min = 0
+        self.OdometryMsg.longitude_deg = -110
+        self.OdometryMsg.longitude_min = 0
+        self.OdometryMsg.bearing_deg = 0
+        self.OdometryMsg.speed = -999  # this value is never used
+        # so it's being set to a dummy value. DO NOT USE IT
+
+        self.WaypointMsg = Waypoint()
+        self.WaypointMsg.search = False
+        self.WaypointMsg.gate = False
+        self.WaypointMsg.odom = Odometry()
+
+        self.TargetMsg = Target()
+        self.TargetMsg.distance = 0
+        self.TargetMsg.bearing = 0
+
+        self.NewsimDataMsg = NewsimData()
+        self.NewsimDataMsg.waypointCoord = [[]]
+        self.NewsimDataMsg.tagCoord = [[]]
+        self.NewsimDataMsg.gate1Coord = [[]]
+        self.NewsimDataMsg.gate2Coord = [[]]
+        self.NewsimDataMsg.obstacleCoord = [[]]
 
     # definitions for message processing are below, with callbacks (cb)
     # at the top and publishing at the bottom
@@ -152,13 +172,40 @@ class SimulatorMetaClass:
     def autonstate_cb(self, channel, msg):
         m = AutonState.decode(msg)
         self.AutonStateMsg.is_auton = m.is_auton
-        print(m.is_auton)
 
     def course_cb(self, channel, msg):
         m = Course.decode(msg)
         self.CourseMsg.num_waypoints = m.num_waypoints
         self.CourseMsg.hash = m.hash
         self.CourseMsg.waypoints = m.waypoints
+
+    def odometry_cb(self, channel, msg):
+        m = Odometry.decode(msg)
+        self.OdometryMsg.latitude_deg = m.latitude_deg
+        self.OdometryMsg.latitude_min = m.latitude_min
+        self.OdometryMsg.longitude_deg = m.longitude_deg
+        self.OdometryMsg.longitude_min = m.longitude_min
+        self.OdometryMsg.bearing_deg = m.bearing_deg
+        self.OdometryMsg.speed = m.speed
+
+    def waypoint_cb(self, channel, msg):
+        m = Waypoint.decode(msg)
+        self.WaypointMsg.search = m.search
+        self.WaypointMsg.gate = m.gate
+        self.WaypointMsg.odom = m.odom
+
+    def target_cb(self, channel, msg):
+        m = Target.decode(msg)
+        self.TargetMsg.distance = m.distance
+        self.TargetMsg.bearing = m.bearing
+    
+    def newsimdata_cb(self, channel, msg):
+        m = NewsimData.decode(msg)
+        self.NewsimDataMsg.waypointCoord = m.waypointCoord
+        self.NewsimDataMsg.tagCoord = m.tagCoord
+        self.NewsimDataMsg.gate1Coord = m.gate1Coord
+        self.NewsimDataMsg.gate2Coord = m.gate2Coord
+        self.NewsimDataMsg.obstacleCoord = m.obstacleCoord
 
     async def publish_ping(self, lcm):
         while True:
@@ -198,6 +245,26 @@ class SimulatorMetaClass:
     async def publish_course(self, lcm):
         while True:
             lcm.publish("/course", self.CourseMsg.encode())
+            await asyncio.sleep(10)
+
+    async def publish_odometry(self, lcm):
+        while True:
+            lcm.publish("/odometry", self.OdometryMsg.encode())
+            await asyncio.sleep(10)
+
+    async def publish_waypoint(self, lcm):
+        while True:
+            lcm.publish("/waypoint", self.WaypointMsg.encode())
+            await asyncio.sleep(10)
+
+    async def publish_target(self, lcm):
+        while True:
+            lcm.publish("/target", self.TargetMsg.encode())
+            await asyncio.sleep(10)
+
+    async def publish_newsimdata(self, lcm):
+        while True:
+            lcm.publish("/newsimdata", self.NewsimDataMsg.encode())
             await asyncio.sleep(10)
 
     """
@@ -272,10 +339,10 @@ class SimulatorMetaClass:
     class GPS:
         def __init__(self, latitude_deg, latitude_min, longitude_deg,
                      longitude_min, bearing_deg, speed):
-            self.lat_deg = latitude_deg
-            self.lat_min = latitude_min
-            self.lon_deg = longitude_deg
-            self.lon_min = longitude_min
+            self.latitude_deg = latitude_deg
+            self.latitude_min = latitude_min
+            self.longitude_deg = longitude_deg
+            self.longitude_deg = longitude_min
             self.bearing = bearing_deg
             self.speed = speed
 
@@ -307,6 +374,35 @@ class SimulatorMetaClass:
             self.num_waypoints = num_waypoints
             self.hash = hash
             self.waypoints = waypoints
+
+    class Odometry:
+        def __init__(self, latitude_deg, latitude_min, longitude_deg,
+                     longitude_min, bearing_deg, speed):
+            self.latitude_deg = latitude_deg
+            self.latitude_min = latitude_min
+            self.longitude_deg = longitude_deg
+            self.longitude_min = longitude_min
+            self.bearing = bearing_deg
+            self.speed = speed
+
+    class Waypoint:
+        def __init__(self, search, gate, odom):
+            self.search = search
+            self.gate = gate
+            self.odom = odom
+
+    class Target:
+        def __init__(self, distance, bearing):
+            self.distance = distance
+            self.bearing = bearing
+    
+    class NewsimData:
+        def __init__(self, waypointCoord, tagCoord, gate1Coord, gate2Coord, obstacleCoord):
+            self.waypointCoord = waypointCoord
+            self.tagCoord = tagCoord
+            self.gate1Coord = gate1Coord
+            self.gate2Coord = gate2Coord
+            self.obstacleCoord = obstacleCoord
 
     # parent class of sim objects. Has all properties common to all
     # objects
@@ -373,8 +469,6 @@ def main():
     # instantiates Simulator class
     Simulator = SimulatorMetaClass()
 
-    Ping, Obstacle, TennisBall, NavStatus,
-    Joystick, GPS, AutonState, Course, Obstacle
     # constantly queries lcm server
     lcm.subscribe("/ping", Simulator.ping_cb)
     lcm.subscribe("/obstacle", Simulator.obstacle_cb)
@@ -384,6 +478,10 @@ def main():
     lcm.subscribe("/gps", Simulator.gps_cb)
     lcm.subscribe("/autonstate", Simulator.autonstate_cb)
     lcm.subscribe("/course", Simulator.course_cb)
+    lcm.subscribe("/odometry", Simulator.odometry_cb)
+    lcm.subscribe("/waypoint", Simulator.waypoint_cb)
+    lcm.subscribe("/target", Simulator.target_cb)
+    lcm.subscribe("/newsimdata", Simulator.newsimdata_cb)
     # lcm.subscribe("\nav_state", Simulator.nav_state_cb)
     # lcm.subscribe("\drive_control", Simulator.joystick_cb)
 
@@ -397,15 +495,13 @@ def main():
         Simulator.publish_joystick(lcm),
         Simulator.publish_gps(lcm),
         Simulator.publish_autonstate(lcm),
-        Simulator.publish_course(lcm)
+        Simulator.publish_course(lcm),
+        Simulator.publish_odometry(lcm),
+        Simulator.publish_waypoint(lcm),
+        Simulator.publish_target(lcm),
+        Simulator.publish_newsimdata(lcm)
         # runSimulator(Simulator)
     )
-    # Simulator.publish_auton_state(lcm),
-    # Simulator.publish_course(lcm),
-    # Simulator.publish_GPS(lcm),
-    # Simulator.publish_obstacle(lcm),
-    # Simulator.publish_tennisball(lcm),
-    # runSimulator(Simulator))
 
     # as a general improvement, it may be worth threading all of the
     # lcm-related bruhaha to offload the worst of the performance hits
