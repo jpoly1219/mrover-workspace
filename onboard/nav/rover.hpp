@@ -84,6 +84,8 @@ public:
 
         Target& target();
 
+        Target& target2();
+
         unsigned getPathTargets();
 
         RoverStatus& operator=( RoverStatus& newRoverStatus );
@@ -112,7 +114,9 @@ public:
 
         // The rover's current target information from computer
         // vision.
-        Target mTarget;
+        Target mTarget1;
+
+        Target mTarget2;
 
         // Total targets to seach for in the course
         unsigned mPathTargets;

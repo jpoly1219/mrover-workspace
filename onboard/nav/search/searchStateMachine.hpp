@@ -48,8 +48,6 @@ private:
 
     bool isObstacleDetected( Rover* phoebe ) const;
 
-    bool isTargetReachable( Rover* phoebe, const rapidjson::Document& roverConfig ) const;
-
     void updateTargetAngle( double bearing );
 
     void updateTurnToTargetRoverAngle( double bearing );

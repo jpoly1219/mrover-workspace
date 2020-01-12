@@ -254,7 +254,9 @@ void StateMachine::updateRoverStatus( Odometry odometry )
 void StateMachine::updateRoverStatus( TargetList targetList )
 {
     Target target1 = targetList.targetList[0];
+    Target target2 = targetList.targetList[1];
     mNewRoverStatus.target() = target1;
+    mNewRoverStatus.target2() = target2;
 } // updateRoverStatus( Target )
 
 // Return true if we want to execute a loop in the state machine, false
@@ -342,9 +344,8 @@ NavState StateMachine::executeDrive()
 {
     const Waypoint& nextWaypoint = mPhoebe->roverStatus().path().front();
     double distance = estimateNoneuclid( mPhoebe->roverStatus().odometry(), nextWaypoint.odom );
-    double bearing = calcBearing( mPhoebe->roverStatus().odometry(), nextWaypoint.odom );
 
-    if( isObstacleDetected() && isWaypointReachable( distance, bearing ) )
+    if( isObstacleDetected() && !isWaypointReachable( distance ) )
     {
         mObstacleAvoidanceStateMachine->updateObstacleElements( getOptimalAvoidanceAngle(), getOptimalAvoidanceDistance() );
         return NavState::TurnAroundObs;
@@ -415,13 +416,9 @@ double StateMachine::getOptimalAvoidanceDistance() const
     return mPhoebe->roverStatus().obstacle().distance + mRoverConfig[ "navThresholds" ][ "waypointDistance" ].GetDouble();
 } // optimalAvoidanceAngle()
 
-bool StateMachine::isWaypointReachable( double distance, double bearing )
+bool StateMachine::isWaypointReachable( double distance )
 {
-    return ( ( mPhoebe->roverStatus().obstacle().distance < distance - 1 ) ||
-     ( ( bearing - mPhoebe->roverStatus().odometry().bearing_deg ) < 0
-                        && mPhoebe->roverStatus().obstacle().bearing > 0 ) ||
-     ( ( bearing - mPhoebe->roverStatus().odometry().bearing_deg ) > 0
-                        && mPhoebe->roverStatus().obstacle().bearing < 0 ) );
+    return isLocationReachable( mPhoebe, mRoverConfig, distance, mRoverConfig["navThresholds"]["waypointDistance"].GetDouble());
 } // isWaypointReachable
 
 // TODOS:

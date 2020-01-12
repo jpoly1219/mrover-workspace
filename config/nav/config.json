@@ -29,6 +29,12 @@
 		"minTurningEffort": 0.25
 	},
 
+	"roverMeasurements":
+	{
+		"width": 3,
+		"halfOfWidth": 1.5
+	},
+
 	"computerVision":
 	{
 		"visionDistance": 4.0

@@ -60,30 +60,11 @@ NavState ObstacleAvoidanceStateMachine::run( Rover* phoebe, const rapidjson::Doc
     } // switch
 }
 
-// Checks that both rover is in search state and that tenis target is detected
+// Checks that both rover is in search state and that target is detected
 bool ObstacleAvoidanceStateMachine::isTargetDetected ( Rover* phoebe )
 {
     return ( phoebe->roverStatus().currentState() == NavState::SearchTurnAroundObs &&
-             phoebe->roverStatus().target().distance != -1 );
-}
-
-// Checks to see if tennis target is reachable before hitting obstacle
-// Tennis target must be closer than obstacle and must be in same direction ( in other words,
-// the rover should be turning the same way to go around the obstacle as to get to the target )
-bool ObstacleAvoidanceStateMachine::isTargetReachable( Rover* phoebe, const rapidjson::Document& roverConfig )
-{
-    double distanceToTarget = phoebe->roverStatus().target().distance;
-    double bearingToTarget = phoebe->roverStatus().target().bearing;
-    double distanceToObstacle = phoebe->roverStatus().obstacle().distance;
-    double bearingToObstacle = phoebe->roverStatus().obstacle().bearing;
-    double targetThreshold = roverConfig[ "navThresholds" ][ "targetDistance" ].GetDouble();
-    double bearingThreshold = roverConfig[ "navThresholds" ][ "bearingThreshold" ].GetDouble();
-
-
-    return distanceToObstacle > distanceToTarget - targetThreshold ||
-                ( bearingToTarget < 0 && bearingToObstacle < 0 ) ||
-                ( bearingToTarget > 0 && bearingToObstacle > 0 ) ||
-                fabs(bearingToObstacle) < fabs(bearingToTarget) - bearingThreshold;
+             phoebe->roverStatus().target().distance >= 0 );
 }
 
 // The obstacle avoidance factory allows for the creation of obstacle avoidance objects and

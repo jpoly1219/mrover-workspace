@@ -33,8 +33,6 @@ public:
 
     bool isTargetDetected( Rover* phoebe );
 
-    bool isTargetReachable( Rover* phoebe, const rapidjson::Document& roverConfig );
-
     virtual Odometry createAvoidancePoint( Rover* phoebe, const double distance ) = 0;
 
     virtual NavState executeTurnAroundObs( Rover* phoebe, const rapidjson::Document& roverConfig ) = 0;

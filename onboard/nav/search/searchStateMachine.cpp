@@ -72,9 +72,9 @@ NavState SearchStateMachine::executeSearchSpin( Rover* phoebe, const rapidjson::
     static double nextStop = 0; // to force the rover to wait initially
     static double mOriginalSpinAngle = 0; //initialize, is corrected on first call
 
-    if( phoebe->roverStatus().target().distance != -1 )
+    if( phoebe->roverStatus().target().distance >= 0 )
     {
-        updateTargetDetectionElements( phoebe->roverStatus().target().bearing, 
+        updateTargetDetectionElements( phoebe->roverStatus().target().bearing,
                                            phoebe->roverStatus().odometry().bearing_deg );
         return NavState::TurnToTarget;
     }
@@ -107,9 +107,9 @@ NavState SearchStateMachine::executeRoverWait( Rover* phoebe, const rapidjson::D
     static bool started = false;
     static time_t startTime;
 
-    if( phoebe->roverStatus().target().distance != -1 )
+    if( phoebe->roverStatus().target().distance >= 0 )
     {
-        updateTargetDetectionElements( phoebe->roverStatus().target().bearing, 
+        updateTargetDetectionElements( phoebe->roverStatus().target().bearing,
                                               phoebe->roverStatus().odometry().bearing_deg );
         return NavState::TurnToTarget;
     }
@@ -150,9 +150,9 @@ NavState SearchStateMachine::executeSearchTurn( Rover* phoebe, const rapidjson::
     {
         return NavState::ChangeSearchAlg;
     }
-    if( phoebe->roverStatus().target().distance != -1 )
+    if( phoebe->roverStatus().target().distance >= 0 )
     {
-        updateTargetDetectionElements( phoebe->roverStatus().target().bearing, 
+        updateTargetDetectionElements( phoebe->roverStatus().target().bearing,
                                            phoebe->roverStatus().odometry().bearing_deg );
         return NavState::TurnToTarget;
     }
@@ -172,9 +172,9 @@ NavState SearchStateMachine::executeSearchTurn( Rover* phoebe, const rapidjson::
 // Else the rover turns to the next Waypoint or turns back to the current Waypoint
 NavState SearchStateMachine::executeSearchDrive( Rover* phoebe )
 {
-    if( phoebe->roverStatus().target().distance != -1 )
+    if( phoebe->roverStatus().target().distance >= 0 )
     {
-        updateTargetDetectionElements( phoebe->roverStatus().target().bearing, 
+        updateTargetDetectionElements( phoebe->roverStatus().target().bearing,
                                            phoebe->roverStatus().odometry().bearing_deg );
         return NavState::TurnToTarget;
     }
@@ -206,7 +206,6 @@ NavState SearchStateMachine::executeSearchDrive( Rover* phoebe )
 // Else the rover continues to turn to to the target.
 NavState SearchStateMachine::executeTurnToTarget( Rover* phoebe )
 {
-    std::cout << phoebe->roverStatus().target().distance << std::endl;
     if( phoebe->roverStatus().target().distance < 0 )
     {
         cerr << "Lost the target. Continuing to turn to last known angle\n";
@@ -241,7 +240,7 @@ NavState SearchStateMachine::executeDriveToTarget( Rover* phoebe, const rapidjso
         return NavState::SearchTurn; //NavState::SearchSpin
     }
     if( isObstacleDetected( phoebe ) &&
-        isTargetReachable( phoebe, roverConfig ) )
+        !isTargetReachable( phoebe, roverConfig ) )
     {
         roverStateMachine->updateObstacleAngle( phoebe->roverStatus().obstacle().bearing );
         roverStateMachine->updateObstacleDistance( phoebe->roverStatus().obstacle().distance );
@@ -272,22 +271,6 @@ bool SearchStateMachine::isObstacleDetected( Rover* phoebe ) const
 {
     return phoebe->roverStatus().obstacle().detected;
 } // isObstacleDetected()
-
-// Checks to see if target is reachable before hitting obstacle
-// Tennis target must be closer than obstacle and must be in  the opposite direction
-bool SearchStateMachine::isTargetReachable( Rover* phoebe, const rapidjson::Document& roverConfig ) const
-{
-    double distanceToTarget = phoebe->roverStatus().target().distance;
-    double distanceToObstacle = phoebe->roverStatus().obstacle().distance;
-    double targetThreshold = roverConfig[ "navThresholds" ][ "targetDistance" ].GetDouble();
-    double bearingToTarget = phoebe->roverStatus().target().bearing;
-    double bearingToObstacle = phoebe->roverStatus().obstacle().bearing;
-    double bearingThreshold = roverConfig[ "navThresholds" ][ "bearingThreshold" ].GetDouble();
-    return distanceToObstacle > distanceToTarget - targetThreshold ||
-           ( bearingToTarget < 0 && bearingToObstacle > 0 ) ||
-           ( bearingToTarget > 0 && bearingToObstacle < 0 ) ||
-           fabs(bearingToObstacle) < fabs(bearingToTarget) - bearingThreshold;
-} // isTennistargetReachable()
 
 // Sets last known target angle, so if target is lost, we
 // continue to turn to that angle
