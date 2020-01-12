@@ -1,0 +1,7 @@
+package rover_msgs;
+
+struct Obstacles {
+    int32_t num_obstacles;
+    int64_t hash;
+    Obstacle obstacles[num_obstacles];
+}
