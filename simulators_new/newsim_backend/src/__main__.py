@@ -6,32 +6,11 @@ from rover_common import aiolcm
 # import time  # for later, for more accurate information and logging
 import asyncio
 from rover_common.aiohelper import run_coroutines
-# from rover_msgs import DanesMsg
 from rover_msgs import (
     Ping, Obstacle, TennisBall, NavStatus,
     Joystick, GPS, AutonState, Course,
-    Odometry, Waypoint, Target, NewsimData
+    Odometry, Waypoint, Target
 )
-# import mathUtils
-
-# 0. Grab from LCM, or whatever intermediary
-# 1. Detect whether the point is within the radius "r" of the rover's view.
-#   (a) Find distance between rover and point
-#   (b) Compare with FOV range
-# 2. Check if the point is within the FOV angle.
-#   (a) Compute the range using FOV angle and the angle of the rover
-#   (b) Compute the angle of the point
-#   (c) Note the range is continuous,
-#       but contain points greater than 360, or less than 0,
-#       so need to compare the point, and the point + 360 deg
-#       (TODO: Check logic)
-# NOTE: Found boolean is equivalent to setting to distance to -1
-# 3. Export to LCM, or whatever intermediary
-#   (a) ???
-# 4. PROFIT!!!
-
-# Algorithm, LCM
-
 
 class SimulatorMetaClass:
 
@@ -110,13 +89,6 @@ class SimulatorMetaClass:
         self.TargetMsg = Target()
         self.TargetMsg.distance = 0
         self.TargetMsg.bearing = 0
-
-        self.NewsimDataMsg = NewsimData()
-        self.NewsimDataMsg.waypointCoord = [[]]
-        self.NewsimDataMsg.tagCoord = [[]]
-        self.NewsimDataMsg.gate1Coord = [[]]
-        self.NewsimDataMsg.gate2Coord = [[]]
-        self.NewsimDataMsg.obstacleCoord = [[]]
 
     # definitions for message processing are below, with callbacks (cb)
     # at the top and publishing at the bottom
@@ -198,14 +170,6 @@ class SimulatorMetaClass:
         m = Target.decode(msg)
         self.TargetMsg.distance = m.distance
         self.TargetMsg.bearing = m.bearing
-    
-    def newsimdata_cb(self, channel, msg):
-        m = NewsimData.decode(msg)
-        self.NewsimDataMsg.waypointCoord = m.waypointCoord
-        self.NewsimDataMsg.tagCoord = m.tagCoord
-        self.NewsimDataMsg.gate1Coord = m.gate1Coord
-        self.NewsimDataMsg.gate2Coord = m.gate2Coord
-        self.NewsimDataMsg.obstacleCoord = m.obstacleCoord
 
     async def publish_ping(self, lcm):
         while True:
@@ -262,55 +226,9 @@ class SimulatorMetaClass:
             lcm.publish("/target", self.TargetMsg.encode())
             await asyncio.sleep(10)
 
-    async def publish_newsimdata(self, lcm):
-        while True:
-            lcm.publish("/newsimdata", self.NewsimDataMsg.encode())
-            await asyncio.sleep(10)
-
-    """
-    def nav_test(self, channel, msg):
-        pass
-        # define this as per the spec
-
     # callback function: takes in variable from LCM, sets values locally
 
-    # async def publish_bearing(self, lcm):
-    #     while True:
-    #         lcm.publish("\bearing", self.BearingMsg.encode())
-    #         await asyncio.sleep(10)
 
-    async def publish_auton_state(self, lcm):
-        while True:
-            lcm.publish("\auton", self.AutonStateMsg.encode())
-            await asyncio.sleep(10)
-
-    # async def publish_gps_state(self, lcm):
-    #     while True:
-    #         lcm.publish("\GPS", self.GPSMsg.encode())
-    #         await asyncio.sleep(10)
-
-    # bearing publish
-
-    async def publish_GPS(self, lcm):
-        while True:
-            lcm.publish("\GPS", self.GPSMsg.encode())
-            await asyncio.sleep(10)
-
-    async def publish_course(self, lcm):
-        while True:
-            lcm.publish("\course", self.CourseMsg.encode())
-            await asyncio.sleep(10)
-
-    async def publish_obstacle(self, lcm):
-        while True:
-            lcm.publish("\obstacle", self.ObstacleMsg.encode())
-            await asyncio.sleep(10)
-
-    async def publish_tennisball(self, lcm):
-        while True:
-            lcm.publish("/tennisball", self.TennisBallMsg.encode())
-            await asyncio.sleep(10)
-    """
     # SimObject definitions are below
     # SimObj is the abstract base class that contains properties
     # common to all objects. define additional simulator objects
@@ -395,14 +313,6 @@ class SimulatorMetaClass:
         def __init__(self, distance, bearing):
             self.distance = distance
             self.bearing = bearing
-    
-    class NewsimData:
-        def __init__(self, waypointCoord, tagCoord, gate1Coord, gate2Coord, obstacleCoord):
-            self.waypointCoord = waypointCoord
-            self.tagCoord = tagCoord
-            self.gate1Coord = gate1Coord
-            self.gate2Coord = gate2Coord
-            self.obstacleCoord = obstacleCoord
 
     # parent class of sim objects. Has all properties common to all
     # objects
@@ -481,9 +391,6 @@ def main():
     lcm.subscribe("/odometry", Simulator.odometry_cb)
     lcm.subscribe("/waypoint", Simulator.waypoint_cb)
     lcm.subscribe("/target", Simulator.target_cb)
-    lcm.subscribe("/newsimdata", Simulator.newsimdata_cb)
-    # lcm.subscribe("\nav_state", Simulator.nav_state_cb)
-    # lcm.subscribe("\drive_control", Simulator.joystick_cb)
 
     # creates loop to execute this code repeatedly with the lcm
     run_coroutines(
@@ -499,7 +406,6 @@ def main():
         Simulator.publish_odometry(lcm),
         Simulator.publish_waypoint(lcm),
         Simulator.publish_target(lcm),
-        Simulator.publish_newsimdata(lcm)
         # runSimulator(Simulator)
     )
 
