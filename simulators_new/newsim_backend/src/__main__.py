@@ -74,9 +74,9 @@ class SimulatorMetaClass:
         self.ObstaclesMsg.obstacles = []
 
         self.OdometryMsg = Odometry()
-        self.OdometryMsg.latitude_deg = 50
+        self.OdometryMsg.latitude_deg = 0
         self.OdometryMsg.latitude_min = 0
-        self.OdometryMsg.longitude_deg = -110
+        self.OdometryMsg.longitude_deg = 0
         self.OdometryMsg.longitude_min = 0
         self.OdometryMsg.bearing_deg = 0
         self.OdometryMsg.speed = 0
@@ -86,7 +86,7 @@ class SimulatorMetaClass:
         self.TargetMsg.bearing = 0
 
         self.TargetListMsg = TargetList()
-        self.TargetListMsg.targetList = []
+        self.TargetListMsg.targetList = [Target(), Target()]
 
         self.WaypointMsg = Waypoint()
         self.WaypointMsg.search = False
@@ -176,57 +176,57 @@ class SimulatorMetaClass:
     async def publish_autonstate(self, lcm):
         while True:
             lcm.publish("/autonstate", self.AutonStateMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_course(self, lcm):
         while True:
             lcm.publish("/course", self.CourseMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_gps(self, lcm):
         while True:
             lcm.publish("/gps", self.GPSMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_joystick(self, lcm):
         while True:
             lcm.publish("/joystick", self.JoystickMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_navstatus(self, lcm):
         while True:
             lcm.publish("/navstatus", self.NavStatusMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_obstacle(self, lcm):
         while True:
             lcm.publish("/obstacle", self.ObstacleMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_obstacles(self, lcm):
         while True:
             lcm.publish("/obstacles", self.ObstaclesMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_odometry(self, lcm):
         while True:
             lcm.publish("/odometry", self.OdometryMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_target(self, lcm):
         while True:
             lcm.publish("/target", self.TargetMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_targetlist(self, lcm):
         while True:
             lcm.publish("/targetlist", self.TargetListMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     async def publish_waypoint(self, lcm):
         while True:
             lcm.publish("/waypoint", self.WaypointMsg.encode())
-            await asyncio.sleep(10)
+            await asyncio.sleep(1)
 
     # callback function: takes in variable from LCM, sets values locally
 
@@ -408,7 +408,7 @@ def main():
         Simulator.publish_odometry(lcm),
         Simulator.publish_target(lcm),
         Simulator.publish_targetlist(lcm),
-        Simulator.publish_waypoint(lcm),
+        Simulator.publish_waypoint(lcm)
         # runSimulator(Simulator)
     )
 
