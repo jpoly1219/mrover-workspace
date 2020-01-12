@@ -4,25 +4,26 @@ import math
 from . import mathUtils
 # TODO:
 # - detect object > done!
-# - detect obstacle > uses the same function as the above, with different parameters
+# - detect obstacle > uses the same function as the above,
+# with different parameters
 # - update rover coords > done...?
 
 # ACCORDING TO SEARCH FOR GATE ALGORITHM:
 # 1. Arrived at waypoint
 # 2. If waypoint is gate, begin search
 # 3. --Search State Machine--
-    # whenever a tennis ball is found, check to see if second tennis ball is found
-    # if two targets found, jump to drive through gate
-# 4. If two tags are found: 
-    # a) drop tag locations
-    # b) drive through gate state
-# 5. If 1 tag found and waypoint was gate: 
-    # a) save location of tag 1
-    # b) begin gate search
+# whenever a tennis ball is found, check to see if second tennis ball is found
+# if two targets found, jump to drive through gate
+# 4. If two tags are found:
+# a) drop tag locations
+# b) drive through gate state
+# 5. If 1 tag found and waypoint was gate:
+# a) save location of tag 1
+# b) begin gate search
 # 6. If second tag < 2m from tag 1 location, continue search
 # 7. If second tag > 2m from tag 1 location, drive between gate
 # 8. Drive between gate: on approach, check if front or back of gate
-    # After driving through, turn around and check if front or back of gate
+# After driving through, turn around and check if front or back of gate
 
 
 # contains the initialization code for initial setup of the field
