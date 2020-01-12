@@ -6,7 +6,6 @@ from rover_common import aiolcm
 # import time  # for later, for more accurate information and logging
 import asyncio
 from rover_common.aiohelper import run_coroutines
-# from rover_msgs import DanesMsg
 from rover_msgs import (
     Ping, Obstacle, TennisBall, NavStatus,
     Joystick, GPS, AutonState, Course,
