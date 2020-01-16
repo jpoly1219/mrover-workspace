@@ -1,4 +1,4 @@
-# from .simHandler import runSimulator
+from .simHandler import runSimulator
 from rover_common import aiolcm
 from abc import ABC
 # import math  # , abstractmethod
@@ -10,7 +10,7 @@ from rover_msgs import (
     AutonState, Course, GPS,
     Joystick, NavStatus, Obstacle,
     Obstacles, Odometry, Target,
-    TargetList, Waypoint
+    Targets, TargetList, Waypoint
 )
 
 
@@ -31,7 +31,7 @@ class SimulatorMetaClass:
         # you still need to set all the defaults
 
         self.AutonStateMsg = AutonState()
-        self.AutonStateMsg.is_auton = False
+        self.AutonStateMsg.is_auton = True
 
         self.CourseMsg = Course()
         self.CourseMsg.num_waypoints = 0
@@ -84,6 +84,9 @@ class SimulatorMetaClass:
         self.TargetMsg = Target()
         self.TargetMsg.distance = 0
         self.TargetMsg.bearing = 0
+
+        self.TargetsMsg = Targets()
+        self.TargetsMsg.targets = []
 
         self.TargetListMsg = TargetList()
         self.TargetListMsg.targetList = [Target(), Target()]
@@ -163,6 +166,10 @@ class SimulatorMetaClass:
         self.TargetMsg.distance = m.distance
         self.TargetMsg.bearing = m.bearing
 
+    def targets_cb(self, channel, msg):
+        m = Targets.decode(msg)
+        self.TargetsMsg.targets = m.targets
+
     def targetlist_cb(self, channel, msg):
         m = TargetList.decode(msg)
         self.TargetListMsg.targetList = m.targetList
@@ -218,6 +225,11 @@ class SimulatorMetaClass:
             lcm.publish("/target", self.TargetMsg.encode())
             await asyncio.sleep(1)
 
+    async def publish_targets(self, lcm):
+        while True:
+            lcm.publish("/targets", self.TargetsMsg.encode())
+            await asyncio.sleep(1)
+
     async def publish_targetlist(self, lcm):
         while True:
             lcm.publish("/targetlist", self.TargetListMsg.encode())
@@ -255,8 +267,8 @@ class SimulatorMetaClass:
             self.latitude_deg = latitude_deg
             self.latitude_min = latitude_min
             self.longitude_deg = longitude_deg
-            self.longitude_deg = longitude_min
-            self.bearing = bearing_deg
+            self.longitude_min = longitude_min
+            self.bearing_deg = bearing_deg
             self.speed = speed
 
     class Joystick:
@@ -285,6 +297,7 @@ class SimulatorMetaClass:
             self.bearing = bearing
             self.distance = distance
 
+    # keep the code, merge it to new LCM channel
     class Obstacles:
         def __init__(self, num_obstacles, hash, obstacles):
             self.num_obstacles = num_obstacles
@@ -312,6 +325,10 @@ class SimulatorMetaClass:
             self.distance = distance
             self.bearing = bearing
 
+    class Targets:
+        def __init__(self, targets):
+            self.targets = targets
+
     class TargetList:
         def __init__(self, targetList):
             self.targetList = targetList
@@ -333,7 +350,7 @@ class SimulatorMetaClass:
             self.lon_deg = GPS.longitude_deg
             self.lon_min = GPS.longitude_min
             self.bearing = GPS.bearing_deg
-            self.shape = 0  # need to create a seed system?
+            self.speed = GPS.speed  # need to create a seed system?
 
         # any methods common to all classes should be defined
         def get_coords(self):
@@ -407,9 +424,10 @@ def main():
         Simulator.publish_obstacles(lcm),
         Simulator.publish_odometry(lcm),
         Simulator.publish_target(lcm),
+        Simulator.publish_targets(lcm),
         Simulator.publish_targetlist(lcm),
-        Simulator.publish_waypoint(lcm)
-        # runSimulator(Simulator)
+        Simulator.publish_waypoint(lcm),
+        runSimulator(Simulator)
     )
 
     # as a general improvement, it may be worth threading all of the
@@ -417,7 +435,7 @@ def main():
     # as the sim becomes more complex and computationally intensive
 
     # time to run this mf'er
-    # runSimulator(Simulator)
+    runSimulator(Simulator)
 
 
 # also necessary for the build system, idk why

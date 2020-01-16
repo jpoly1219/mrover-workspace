@@ -1,12 +1,10 @@
 # from .__main__ import SimulatorMetaClass
 import asyncio
 import math
+import time
 from . import mathUtils
 # TODO:
-# - detect object > done!
-# - detect obstacle > uses the same function as the above,
-# with different parameters
-# - update rover coords > done...?
+# 1. FIX THE FUCKING LIST ITERATION
 
 # ACCORDING TO SEARCH FOR GATE ALGORITHM:
 # 1. Arrived at waypoint
@@ -28,9 +26,10 @@ from . import mathUtils
 
 # contains the initialization code for initial setup of the field
 def initObjectsOnField(sim):
+    # 39, 0, -110, 0, 0 ,0
     startPos = sim.GPS(39, 0, -110, 0, 0, 0)
     field = sim.Field(startPos)  # make field entity and rover
-    rover = sim.Rover(startPos, sim.JoystickMsg.dampen, 1, 1)
+    rover = sim.Rover(startPos, sim.JoystickMsg.dampen)
     return rover, field  # if we init more than this, return a list
     # for future reference, this is where uploaded test cases get init
 
@@ -42,9 +41,9 @@ def addObject(sim, obj_struct, obj_type):  # this may be implemented
     if obj_type == "obstacle":
         sim.Obstacles.append(obj_struct)
     elif obj_type == "waypoint":
-        sim.Waypoints.append(obj_struct)
-    elif obj_type == "tennis ball":
-        sim.Tennis_Balls.append(obj_struct)
+        sim.Course.append(obj_struct)
+    elif obj_type == "target":
+        sim.Targets.append(obj_struct)
     else:
         print("Object passed is not valid")
 
@@ -56,7 +55,7 @@ def removeObject(sim, obj_in):
         if id(item) == id(obj_in):
             sim.Waypoints.remove(obj_in)
             break
-    for item in sim.Tennis_Balls:
+    for item in sim.Targets:
         if id(item) == id(obj_in):
             sim.Waypoints.remove(obj_in)
             break
@@ -141,16 +140,16 @@ def move_interpolate(sim, angle, distance):
     # this is not currently used, but is here for later
 
 
-async def simulatorOn(sim):
+def simulatorOn(sim):
     while True:
         if sim.AutonStateMsg.is_auton is not True:
             break
         else:
-            calc_visible(sim, sim.Tennis_Balls)
+            calc_visible(sim, sim.Targets)
             calc_visible(sim, sim.Obstacles)
             move_trans(sim)
             move_rot(sim)
-        await asyncio.sleep(10)
+        time.sleep(1)
 
 
 async def runSimulator(sim):
