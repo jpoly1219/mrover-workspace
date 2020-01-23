@@ -1,4 +1,4 @@
-# from .simHandler import runSimulator
+from .simHandler import runSimulator
 from rover_common import aiolcm
 from abc import ABC
 # import math  # , abstractmethod
@@ -10,7 +10,7 @@ from rover_msgs import (
     AutonState, Course, GPS,
     Joystick, NavStatus, Obstacle,
     Obstacles, Odometry, Target,
-    TargetList, Waypoint
+    Targets, TargetList, Waypoint
 )
 
 
@@ -31,10 +31,10 @@ class SimulatorMetaClass:
         # you still need to set all the defaults
 
         self.AutonStateMsg = AutonState()
-        self.AutonStateMsg.is_auton = False
+        self.AutonStateMsg.is_auton = True
 
         self.CourseMsg = Course()
-        self.CourseMsg.num_waypoints = 0
+        self.CourseMsg.num_waypoints = 2
         self.CourseMsg.hash = 0
         self.CourseMsg.waypoints = []
 
@@ -69,9 +69,10 @@ class SimulatorMetaClass:
         self.ObstacleMsg.distance = 0.0
 
         self.ObstaclesMsg = Obstacles()
-        self.ObstaclesMsg.num_obstacles = 0
+        self.ObstaclesMsg.num_obstacles = 2
         self.ObstaclesMsg.hash = 0
-        self.ObstaclesMsg.obstacles = []
+        self.ObstaclesMsg.obstacles = [[], [], [], [], []]
+        self.ObstaclesMsg.obsNames = []
 
         self.OdometryMsg = Odometry()
         self.OdometryMsg.latitude_deg = 0
@@ -84,6 +85,11 @@ class SimulatorMetaClass:
         self.TargetMsg = Target()
         self.TargetMsg.distance = 0
         self.TargetMsg.bearing = 0
+
+        self.TargetsMsg = Targets()
+        self.TargetsMsg.num_targets = 2
+        self.TargetsMsg.targets = [[], [], [], [], []]
+        self.TargetsMsg.targNames = []
 
         self.TargetListMsg = TargetList()
         self.TargetListMsg.targetList = [Target(), Target()]
@@ -148,6 +154,7 @@ class SimulatorMetaClass:
         self.ObstaclesMsg.num_obstacles = m.num_obstacles
         self.ObstaclesMsg.hash = m.hash
         self.ObstaclesMsg.obstacles = m.obstacles
+        self.ObstaclesMsg.obsNames = m.obsNames
 
     def odometry_cb(self, channel, msg):
         m = Odometry.decode(msg)
@@ -162,6 +169,12 @@ class SimulatorMetaClass:
         m = Target.decode(msg)
         self.TargetMsg.distance = m.distance
         self.TargetMsg.bearing = m.bearing
+
+    def targets_cb(self, channel, msg):
+        m = Targets.decode(msg)
+        self.TargetsMsg.num_targets = m.num_targets
+        self.TargetsMsg.targets = m.targets
+        self.TargetsMsg.targNames = m.targNames
 
     def targetlist_cb(self, channel, msg):
         m = TargetList.decode(msg)
@@ -218,6 +231,11 @@ class SimulatorMetaClass:
             lcm.publish("/target", self.TargetMsg.encode())
             await asyncio.sleep(1)
 
+    async def publish_targets(self, lcm):
+        while True:
+            lcm.publish("/targets", self.TargetsMsg.encode())
+            await asyncio.sleep(1)
+
     async def publish_targetlist(self, lcm):
         while True:
             lcm.publish("/targetlist", self.TargetListMsg.encode())
@@ -255,8 +273,8 @@ class SimulatorMetaClass:
             self.latitude_deg = latitude_deg
             self.latitude_min = latitude_min
             self.longitude_deg = longitude_deg
-            self.longitude_deg = longitude_min
-            self.bearing = bearing_deg
+            self.longitude_min = longitude_min
+            self.bearing_deg = bearing_deg
             self.speed = speed
 
     class Joystick:
@@ -285,17 +303,19 @@ class SimulatorMetaClass:
             self.bearing = bearing
             self.distance = distance
 
+    # keep the code, merge it to new LCM channel
     class Obstacles:
-        def __init__(self, num_obstacles, hash, obstacles):
+        def __init__(self, num_obstacles, hash, obstacles, obsNames):
             self.num_obstacles = num_obstacles
             self.hash = hash
             self.obstacles = obstacles
+            self.obsNames = obsNames
             # pull exact coordinates from GPS
-            self.lat_deg = GPS.latitude_deg
-            self.lat_min = GPS.latitude_min
-            self.lon_deg = GPS.longitude_deg
-            self.lon_min = GPS.longitude_min
-            self.bearing = GPS.bearing_deg
+            # self.lat_deg = GPS.latitude_deg
+            # self.lat_min = GPS.latitude_min
+            # self.lon_deg = GPS.longitude_deg
+            # self.lon_min = GPS.longitude_min
+            # self.bearing = GPS.bearing_deg
 
     class Odometry:
         def __init__(self, latitude_deg, latitude_min, longitude_deg,
@@ -311,6 +331,12 @@ class SimulatorMetaClass:
         def __init__(self, distance, bearing):
             self.distance = distance
             self.bearing = bearing
+
+    class Targets:
+        def __init__(self, num_targets, targets, targNames):
+            self.num_targets = num_targets
+            self.targets = targets
+            self.targNames = targNames
 
     class TargetList:
         def __init__(self, targetList):
@@ -333,7 +359,7 @@ class SimulatorMetaClass:
             self.lon_deg = GPS.longitude_deg
             self.lon_min = GPS.longitude_min
             self.bearing = GPS.bearing_deg
-            self.shape = 0  # need to create a seed system?
+            self.speed = GPS.speed  # need to create a seed system?
 
         # any methods common to all classes should be defined
         def get_coords(self):
@@ -363,12 +389,14 @@ class SimulatorMetaClass:
             self.speed_translational = speed_trans
             # speed multiplier, 1 if not specified
             self.speed_rotational = speed_rot
-    """
-    class Obstacle(SimObj):
-        def __init__(self, GPS):  # other properties
-            super().__init__(GPS)
 
-    class Waypoint(SimObj):
+    """
+    class SimObstacle(SimObj):
+        def __init__(self, GPS, name):  # other properties
+            super().__init__(GPS)
+            self.name = name # the order of this MIGHT need to change
+
+    class SimWaypoint(SimObj):
         def __init__(self, GPS, searchable=0):
             super().__init__(GPS)
             self.search = searchable  # defaults to false if not set
@@ -407,9 +435,10 @@ def main():
         Simulator.publish_obstacles(lcm),
         Simulator.publish_odometry(lcm),
         Simulator.publish_target(lcm),
+        Simulator.publish_targets(lcm),
         Simulator.publish_targetlist(lcm),
-        Simulator.publish_waypoint(lcm)
-        # runSimulator(Simulator)
+        Simulator.publish_waypoint(lcm),
+        runSimulator(Simulator)
     )
 
     # as a general improvement, it may be worth threading all of the
@@ -417,7 +446,7 @@ def main():
     # as the sim becomes more complex and computationally intensive
 
     # time to run this mf'er
-    # runSimulator(Simulator)
+    runSimulator(Simulator)
 
 
 # also necessary for the build system, idk why
