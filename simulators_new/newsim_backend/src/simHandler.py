@@ -34,6 +34,7 @@ def initObjectsOnField(sim):
     # for future reference, this is where uploaded test cases get init
 
 
+"""
 def addObject(sim, obj_struct, obj_type):  # this may be implemented
     # in a way that it totally not necessary
 
@@ -79,6 +80,7 @@ def calc_move_best_path(sim, object_list, rover, delta_y, delta_x):
         diff = rover.fov/2 + angle
         rover.move_rot(-diff)
         return -diff
+"""
 
 
 def calc_visible(sim, object_list):
@@ -89,16 +91,19 @@ def calc_visible(sim, object_list):
                 math.hypot(delta_x, delta_y) < sim.rover.cv_thresh):
             # checking if object is within
             # fov and detection distance (cv_thresh)
-            if isinstance(item, sim.TennisBall):  # detect which object
-                sim.TennisBallMsg.found = True
-                sim.TennisBallMsg.distance = math.hypot(delta_x, delta_y)
-                sim.TennisBallMsg.bearing = math.atan2(delta_y, delta_x)
-            if isinstance(item, sim.Obstacle):
+            # if Target is found, notify Auton
+            if object_list == sim.TargetsMsg.targets:  # detect which object
+                # sim.TargetMsg.found = True
+                # found boolean isn't in the lcm message... ask Ana
+                sim.TargetMsg.distance = math.hypot(delta_x, delta_y)
+                sim.TargetMsg.bearing = math.atan2(delta_y, delta_x)
+            # if Obstacle is found, notify Auton
+            if object_list == sim.ObstaclesMsg.obstacles:
                 sim.ObstacleMsg.detected = True
-                sim.ObstacleMsg.bearing = calc_move_best_path(
-                    sim, object_list, sim.rover,
-                    delta_x, delta_y
-                )
+                # sim.ObstacleMsg.bearing = calc_move_best_path(
+                # sim, object_list, sim.rover,
+                # delta_x, delta_y
+                # )
                 # calculates best path away from the obstacle, not bearing to
     # for obj in object_list:
         # rover loc - obj loc = delta loc
@@ -109,10 +114,10 @@ def calc_visible(sim, object_list):
 
 
 def changeRoverPos(sim, deltaDeg):
-    sim.rover.lat_deg = deltaDeg.lat_deg
-    sim.rover.lat_min = deltaDeg.lat_min
-    sim.rover.lon_deg = deltaDeg.lon_deg
-    sim.rover.long_min = deltaDeg.lon_min
+    sim.rover.lat_deg = deltaDeg[0]
+    sim.rover.lat_min = deltaDeg[1]
+    sim.rover.lon_deg = deltaDeg[2]
+    sim.rover.long_min = deltaDeg[3]
 
 
 # move translationally, if distance is specified you move that many meters,
@@ -139,14 +144,37 @@ def move_interpolate(sim, angle, distance):
     # turn at the same time on the IRL rover
     # this is not currently used, but is here for later
 
+# ----------------------------------------------------------------------------------
+# Three different LCM Channels:
+# - Course.lcm (stores waypoints)
+# - Obstacles.lcm (stores obstacles)
+#   - the array is going to have type simObstacle(ABC)
+# - Targets.lcm (stores targets)
+#   - the array is going to have type simTarget(ABC)
+
+# sim.CourseMsg.waypoints
+# sim.ObstaclesMsg.obstacles/.obsNames
+# sim.TargetsMsg.targets/.targNames
+
+# the list is going to look like this:
+# [[1 2 3 4 5], [1 2 3 4 5], [1 2 3 4 5], ...]
+# ["name1", "name2", "name3", ...]
+
+# in the main.py, create ABCs, then have the lists store those ABC objects.
+# now the problem is the Course.lcm, because I can't really change that...
+# if I were to make an ABC like simWaypoint,
+# how am I going to pipe the list to the Course.lcm?
+# gotta think...
+# actually scrap that idea I think there is a better idea (?)
+
 
 def simulatorOn(sim):
     while True:
         if sim.AutonStateMsg.is_auton is not True:
             break
         else:
-            calc_visible(sim, sim.Targets)
-            calc_visible(sim, sim.Obstacles)
+            calc_visible(sim, sim.ObstaclesMsg.obstacles)
+            calc_visible(sim, sim.TargetsMsg.targets)
             move_trans(sim)
             move_rot(sim)
         time.sleep(1)

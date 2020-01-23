@@ -2,5 +2,6 @@ package rover_msgs;
 
 struct Targets {
     int32_t num_targets;
-    Target targets[num_targets];
+    int32_t targets[num_targets][5];
+    string targNames[num_targets];
 }

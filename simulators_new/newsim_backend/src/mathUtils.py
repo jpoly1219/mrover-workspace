@@ -6,7 +6,7 @@ import math
 
 # Constants:
 
-METER_LAT_DEG = 111, 200
+METER_LAT_DEG = 111120
 METER_LAT_MINUTES = 1853
 
 

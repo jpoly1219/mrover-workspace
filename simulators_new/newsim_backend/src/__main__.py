@@ -34,7 +34,7 @@ class SimulatorMetaClass:
         self.AutonStateMsg.is_auton = True
 
         self.CourseMsg = Course()
-        self.CourseMsg.num_waypoints = 0
+        self.CourseMsg.num_waypoints = 2
         self.CourseMsg.hash = 0
         self.CourseMsg.waypoints = []
 
@@ -69,9 +69,10 @@ class SimulatorMetaClass:
         self.ObstacleMsg.distance = 0.0
 
         self.ObstaclesMsg = Obstacles()
-        self.ObstaclesMsg.num_obstacles = 0
+        self.ObstaclesMsg.num_obstacles = 2
         self.ObstaclesMsg.hash = 0
-        self.ObstaclesMsg.obstacles = []
+        self.ObstaclesMsg.obstacles = [[], [], [], [], []]
+        self.ObstaclesMsg.obsNames = []
 
         self.OdometryMsg = Odometry()
         self.OdometryMsg.latitude_deg = 0
@@ -86,7 +87,9 @@ class SimulatorMetaClass:
         self.TargetMsg.bearing = 0
 
         self.TargetsMsg = Targets()
-        self.TargetsMsg.targets = []
+        self.TargetsMsg.num_targets = 2
+        self.TargetsMsg.targets = [[], [], [], [], []]
+        self.TargetsMsg.targNames = []
 
         self.TargetListMsg = TargetList()
         self.TargetListMsg.targetList = [Target(), Target()]
@@ -151,6 +154,7 @@ class SimulatorMetaClass:
         self.ObstaclesMsg.num_obstacles = m.num_obstacles
         self.ObstaclesMsg.hash = m.hash
         self.ObstaclesMsg.obstacles = m.obstacles
+        self.ObstaclesMsg.obsNames = m.obsNames
 
     def odometry_cb(self, channel, msg):
         m = Odometry.decode(msg)
@@ -168,7 +172,9 @@ class SimulatorMetaClass:
 
     def targets_cb(self, channel, msg):
         m = Targets.decode(msg)
+        self.TargetsMsg.num_targets = m.num_targets
         self.TargetsMsg.targets = m.targets
+        self.TargetsMsg.targNames = m.targNames
 
     def targetlist_cb(self, channel, msg):
         m = TargetList.decode(msg)
@@ -299,16 +305,17 @@ class SimulatorMetaClass:
 
     # keep the code, merge it to new LCM channel
     class Obstacles:
-        def __init__(self, num_obstacles, hash, obstacles):
+        def __init__(self, num_obstacles, hash, obstacles, obsNames):
             self.num_obstacles = num_obstacles
             self.hash = hash
             self.obstacles = obstacles
+            self.obsNames = obsNames
             # pull exact coordinates from GPS
-            self.lat_deg = GPS.latitude_deg
-            self.lat_min = GPS.latitude_min
-            self.lon_deg = GPS.longitude_deg
-            self.lon_min = GPS.longitude_min
-            self.bearing = GPS.bearing_deg
+            # self.lat_deg = GPS.latitude_deg
+            # self.lat_min = GPS.latitude_min
+            # self.lon_deg = GPS.longitude_deg
+            # self.lon_min = GPS.longitude_min
+            # self.bearing = GPS.bearing_deg
 
     class Odometry:
         def __init__(self, latitude_deg, latitude_min, longitude_deg,
@@ -326,8 +333,10 @@ class SimulatorMetaClass:
             self.bearing = bearing
 
     class Targets:
-        def __init__(self, targets):
+        def __init__(self, num_targets, targets, targNames):
+            self.num_targets = num_targets
             self.targets = targets
+            self.targNames = targNames
 
     class TargetList:
         def __init__(self, targetList):
@@ -380,12 +389,14 @@ class SimulatorMetaClass:
             self.speed_translational = speed_trans
             # speed multiplier, 1 if not specified
             self.speed_rotational = speed_rot
-    """
-    class Obstacle(SimObj):
-        def __init__(self, GPS):  # other properties
-            super().__init__(GPS)
 
-    class Waypoint(SimObj):
+    """
+    class SimObstacle(SimObj):
+        def __init__(self, GPS, name):  # other properties
+            super().__init__(GPS)
+            self.name = name # the order of this MIGHT need to change
+
+    class SimWaypoint(SimObj):
         def __init__(self, GPS, searchable=0):
             super().__init__(GPS)
             self.search = searchable  # defaults to false if not set
